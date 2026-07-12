@@ -2,16 +2,33 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "react": "^16.11.0",
-    "react-dom": "^16.11.0",
-    "react-scripts": "^5.0.0"
+  "description": "MERN FIRST PROJECT",
+  "keywords": [
+    "NODE",
+    "SARTHAK"
+  ],
+  "homepage": "https://github.com/Water31415/Social-Networking-app#readme",
+  "bugs": {
+    "url": "https://github.com/Water31415/Social-Networking-app/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Water31415/Social-Networking-app.git"
+  },
+  "license": "ISC",
+  "author": "SARTHAK",
+  "type": "commonjs",
+  "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "react-scripts": "^5.0.0"
   },
   "eslintConfig": {
     "extends": "react-app"
