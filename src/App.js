@@ -2,7 +2,7 @@ import React from 'react';
 import {BrowserRouter as Router , Route ,Redirect, Switch} from 'react-router-dom'
 import User from './user/pages/user.js';
 import Places from './places/pages/NewPlaces.js'
-import MainNavigation from './shared/components/UIElements/Navigation/MainNavigation.js';
+import MainNavigation from './shared/components/Navigation/MainNavigation.js';
 const App = () => {
   return 
   <Router>
