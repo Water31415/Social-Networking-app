@@ -1,4 +1,4 @@
-import react,{useState} from "react";
+import React,{useState} from "react";
 import "./MainNavigation.css"
 import MainHeader from "./MainHeader";
 import { Link } from "react-router-dom";
@@ -8,36 +8,36 @@ import Backdrop from "../UIElements/Backdrop";
 
 const MainNavigation = props =>{
         const[drawerIsOpen,setDrawerIsOpen] = useState(false)
-        const openDrawer = ()=>{
+        const openDrawerHandler = ()=>{
             setDrawerIsOpen(true)
         }
-         const closeDrawer = ()=>{
+         const closeDrawerHandler = ()=>{
             setDrawerIsOpen(false)
         }
-    return 
-    <react.Fragment>
-        {drawerIsOpen && <Backdrop onClick={closeDrawer}/>}
-    {drawerIsOpen ? <SlideDrawer>
+    return( 
+    <React.Fragment>
+        {drawerIsOpen && <Backdrop onClick={closeDrawerHandler}/>}
+         <SlideDrawer show ={drawerIsOpen} onClick={closeDrawerHandler}>
         <nav className="main-navigation_drawer-nav">
         <NavLinks/>
 
         </nav>
-    </SlideDrawer> :null }
+    </SlideDrawer> 
     <MainHeader>
-        <button className="main-navigation_menu-btn" onClick={openDrawer}>
+        <button className="main-navigation_menu-btn" onClick={openDrawerHandler}>
             <span/>
             <span/>
             <span/>
         </button>
         <h1 className="main-navigation_tittle">
-            <Link>your places</Link>
+            <Link to ="/">your places</Link>
         </h1>
         <nav className="main-navigation_header">
             <NavLinks/>
         </nav>
         
     </MainHeader>
-    </react.Fragment> 
+    </React.Fragment> )
 }
 
 
