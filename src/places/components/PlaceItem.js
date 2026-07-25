@@ -1,26 +1,76 @@
-import React from "react";
+import React,{useState}from "react";
 import "./PlaceItem.css"
 import Card from "../../shared/components/UIElements/Card";
+import Button from "../../shared/components/FormElements/Button"
+import Modal from "../../shared/components/UIElements/Modal";
+import Map from "../../shared/components/UIElements/Map";
 
 
 const PlaceItem = props=>{
+    const [showMap,setShowMap] = useState(false)
+    const [showConfirmModal,setShowConfirmModal]=useState(false)
+
+    const openMaphandler= ()=> {
+            setShowMap(true)}
+
+
+    const closeMaphandler= ()=>{
+         setShowMap(false)}
+
+    const showDeleteWarningHandler=()=>{
+        setShowConfirmModal(true)
+    }
+    const cancelDeleteHandler=()=>{
+        setShowConfirmModal(false)
+    }
+    const confirmDeleteHandler=()=>{
+        setShowConfirmModal(false)
+        console.log("....deleting")
+    }
+
     return (
+        <React.Fragment>
+            <Modal 
+            show ={showMap} 
+            onCancel ={closeMaphandler} 
+            header ={props.address} 
+            contentClass = "place-item__modal-content"
+            footerClass ="place-item__modal-content"
+            footer ={<Button onClick={closeMaphandler}>CLOSE</Button>}>
+                <div className="map-container">
+                    <Map center={props.coordiantes} zoom={16}/>
+                </div>
+            </Modal>
+            <Modal
+            show={showConfirmModal}
+            onCancel={cancelDeleteHandler} 
+            header="Are you sure" 
+            footerClass="place-item__modal-actions" 
+            footer={
+                <React.Fragment>
+                    <Button inverse onClick={cancelDeleteHandler}>Cancel</Button>
+                    <Button danger onClick={confirmDeleteHandler}>Delete</Button>
+                </React.Fragment>
+            } >
+                Do you want to delete this place?
+            </Modal>
         <li className="place-item">
-            <Card>
-                <div className="place-item_image">
+            <Card className ="place-item__content">
+                <div className="place-item__image">
                 <image src ={props.image} alt ={props.tittle}/>
             </div>
-            <div className="place-item_info">
+            <div className="place-item__info">
                 <h2>{props.tittle}</h2>
                 <h3>{props.address}</h3>
                 <p>{props.description}</p>
             </div>
-            <div className="place-item_actions ">
-                <button>VIEW ON MAP</button>
-                <button>EDIT</button>
-                <button>DELETE</button>
+            <div className="place-item__actions ">
+                <Button inverse onClick={openMaphandler}>VIEW ON MAP</Button>
+                <Button to ={`/places/${props.id}`}>EDIT</Button>
+                <Button danger onClick={showDeleteWarningHandler}>DELETE</Button>
             </div>
             </Card>
-        </li>)
+        </li>
+        </React.Fragment>)
 }
 export default PlaceItem
