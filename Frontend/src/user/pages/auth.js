@@ -1,14 +1,16 @@
-import React,{useState} from "react";
+import React,{useState,useContext} from "react";
 import Input from "../../shared/components/FormElements/Input";
 import { useForm } from "../../shared/hooks/form-hooks";
 import {VALIDATOR_REQUIRE,VALIDATOR_EMAIL} from "../../shared/Utils/Validators"
 import Button from "../../shared/components/FormElements/Button";
 import "./auth.css"
 import Card from "../../shared/components/UIElements/Card";
-
+import { AuthContext } from "../../shared/components/context/auth-context";
 
 
 const AuthUser =()=>{
+    const auth=useContext(AuthContext)
+
     const[isLoginMode,setIsLoginMode]=useState(true)
 
     const [formState,titleInputHandler,setFormData]=useForm({
@@ -25,6 +27,7 @@ const AuthUser =()=>{
     const authSubmitHandler=event =>{
         event.preventDefault()
         console.log(formState)
+        auth.login()
     }
     const switchModeHandler=()=>{
         if (!isLoginMode) {
@@ -54,11 +57,11 @@ const AuthUser =()=>{
             <h2>LOGIN</h2>
         <form onSubmit={authSubmitHandler}>
             {!isLoginMode && (<Input
-                element ="Input"
+                element ="input"
                 id="name"
                 type="text"
                 label ="Your Name"
-                validators={VALIDATOR_REQUIRE()}
+                validators={[VALIDATOR_REQUIRE()]}
                 errorText="Please enter a name"
                 onInput ={titleInputHandler}
             />)}
