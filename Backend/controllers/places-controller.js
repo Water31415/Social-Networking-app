@@ -1,6 +1,7 @@
 const uuid = require('uuid/v4')
-const {validationResult}=require('express-validators')
+const {validationResult}=require('express-validator')
 const HttpError = require('../models/http-error')
+const getCoordsForAddress = require('../utils/location')
 
 
 
@@ -46,21 +47,28 @@ const getPlacesByUserId=(req,res,next)=>{
     })
 
 }
-const createPlace =(req,res,next)=>{
+const createPlace =async(req,res,next)=>{
     const errors=validationResult(req)
     if (!errors.isEmpty()) {
         console.error(errors);
         
-        throw new HttpError("Invalid data entry",422)
+        next( new HttpError("Invalid data entry",422))
         
     }
-    const {title , description , address,coordinates,creator}=req.body
+    const {title , description ,address,creator}=req.body
+
+    let coordinates; 
+    try {
+        coordinates = await getCoordsForAddress(address)
+    } catch (error) {
+            return next(error)
+    }
     const createdPlace={
         id : uuid(),
         title : title,
         description :description,
         address : address,
-        location :coordinates,
+        location :{coordinates:coordinates},
         creator:creator
 
     }
@@ -68,14 +76,21 @@ const createPlace =(req,res,next)=>{
 
 }
 const updatePlace = (req,res,next)=>{
+    const errors=validationResult(req)
+    if (!errors.isEmpty()) {
+        console.error(errors);
+        
+        throw new HttpError("Invalid data entry",422)
+        
+    }
     const {title,description}=req.body
     const placeId = req.params.pid
     const updatedPlace = {...DUMMY_PLACES.find(p=>p.id===placeId)} 
-    const placeIndex = DUMMY_PLACES.find(p=>p.id===placeId)
-    updatePlace.title=title
-    updatePlace.description=description
-    DUMMY_PLACES[placeIndex]=updatePlace
-    res.status(201).json({placeId:updatedPlace})
+    const placeIndex = DUMMY_PLACES.findIndex(p=>p.id===placeId)
+    updatedPlace.title=title
+    updatedPlace.description=description
+    DUMMY_PLACES[placeIndex]=updatedPlace
+    res.status(200).json({place:updatedPlace})
 }
 const deletePlace =(req,res,next)=>{
     const placeId = req.params.pid

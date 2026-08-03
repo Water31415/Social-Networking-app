@@ -14,7 +14,7 @@ const DUMMY_USERS = [
 
 
 const getUser =(req,res,next)=>{
-    res.status(200).json({users : DUMMY_PLACES})
+    res.status(200).json({users : DUMMY_USERS})
     
 }
 
@@ -37,6 +37,13 @@ const signUp = (req,res,next)=>{
 }
 
 const login =(req,res,next)=>{
+  const errors=validationResult(req)
+    if (!errors.isEmpty()) {
+        console.error(errors);
+        
+        throw new HttpError("Invalid data entry",422)
+        
+    }
   const {email,password}=req.body
   if(!(email || password)){
     throw new httpError("Enter all the fields"||404)
