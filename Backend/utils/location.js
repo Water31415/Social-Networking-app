@@ -6,7 +6,7 @@ const getCoordsForAddress= async (address) => {
     const response = await axios.get(`https://us1.locationiq.com/v1/search?key=${API_KEY}&q=${encodeURIComponent(address)}&format=json`)
 
     const data =response.data[0]
-    console.log(data);
+    //console.log(data);
     
     if(!data){
          const error= new HttpError('location not found',422)
@@ -16,7 +16,7 @@ const getCoordsForAddress= async (address) => {
         const coordLong=data.lon
         const coordinates={
             lat:coordLats,
-            long:coordLong
+            lng:coordLong
         } 
     return coordinates
 }

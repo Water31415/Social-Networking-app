@@ -1,4 +1,6 @@
-const httpError=require("../models/http-error")
+const HttpError = require("../models/http-error");
+const httpError=require("../models/http-error");
+const User = require("../models/user")
 const uuid = require("uuid/v4")
 
 const DUMMY_USERS = [
@@ -13,30 +15,45 @@ const DUMMY_USERS = [
 
 
 
-const getUser =(req,res,next)=>{
-    res.status(200).json({users : DUMMY_USERS})
+const getUser =async(req,res,next)=>{
+  let users  
+  try {
+     users = await User.find({},"-password")
+    } catch (error) {
+      return next(new HttpError("Fetching user failed , try again ",500))
+    }
+    res.status(200).json( {users : users.map(user=>user.toObject({getters:true}))})
     
 }
 
-const signUp = (req,res,next)=>{
+const signUp = async(req,res,next)=>{
   const {name,email,password}=req.body
   if(!(name && email && password)){
-    throw new httpError("Enter all the fields",404)
+    next( new httpError("Enter all the fields",404))
   }
-  const createdUser={
-    id : uuid(),
-    name,
-    email,
-    password
+  const existingUser = await User.findOne({email :email})
+  if(existingUser){
+    return next(new HttpError("User already exist,try diff email",500))
   }
-  DUMMY_USERS.push(createdUser)
+  const createdUser = new User(
+    {
+      name :name,
+      image : "dafafafaf",
+      password: "",
+      places : places
+    }
+  )
+  try {
+    await createdUser.save()
+  } catch (error) {
+    return next(new HttpError("creating user failed , try again",500))
+  }
   res.status(201).json({
-    message : "user created",
-    createdUser
+    user: createdUser.toObject({getters:true})
   })
 }
 
-const login =(req,res,next)=>{
+const login =async(req,res,next)=>{
   const errors=validationResult(req)
     if (!errors.isEmpty()) {
         console.error(errors);
@@ -48,7 +65,8 @@ const login =(req,res,next)=>{
   if(!(email || password)){
     throw new httpError("Enter all the fields"||404)
   }
-  const identifiedUser = DUMMY_USERS.find(p=>p.email===email)
+  const identifiedUser = User.findOne({email:email})
+
   if(!identifiedUser||!identifiedUser.password===password){
     throw new httpError("no valid info",401)
   }
