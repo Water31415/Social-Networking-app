@@ -1,5 +1,4 @@
 const mongoose =require("mongoose")
-const uniqueValidator = require("mongoose-unique-validator")
 const Schema = mongoose.Schema
 const Place = require("../models/places")
 
@@ -25,6 +24,5 @@ const userSchema = new Schema({
     }
 
 },{timestamps:true})
-userSchema.plugin(uniqueValidator)
 
 module.exports= mongoose.model('User',userSchema)

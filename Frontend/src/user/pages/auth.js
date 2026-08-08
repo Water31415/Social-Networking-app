@@ -2,6 +2,8 @@ import React,{useState,useContext} from "react";
 import Input from "../../shared/components/FormElements/Input";
 import { useForm } from "../../shared/hooks/form-hooks";
 import {VALIDATOR_REQUIRE,VALIDATOR_EMAIL} from "../../shared/Utils/Validators"
+import ErrorModal from "../../shared/components/UIElements/ErrorModal"
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner"
 import Button from "../../shared/components/FormElements/Button";
 import "./auth.css"
 import Card from "../../shared/components/UIElements/Card";
@@ -12,6 +14,8 @@ const AuthUser =()=>{
     const auth=useContext(AuthContext)
 
     const[isLoginMode,setIsLoginMode]=useState(true)
+    const [isLoading,setIsLoading]=useState(false)
+    const[error,setError]=useState()
 
     const [formState,titleInputHandler,setFormData]=useForm({
         email :{
@@ -24,10 +28,39 @@ const AuthUser =()=>{
 
         }
     })
-    const authSubmitHandler=event =>{
+    const authSubmitHandler= async event =>{
         event.preventDefault()
-        console.log(formState)
-        auth.login()
+
+        if (isLoginMode) {
+            
+        } else {
+            try {
+                const response =await fetch('http://localhost:5000/api/users/signup',{
+                    method : 'POST',
+                    headers : {
+                        'Content-Type': 'application/json'
+                    },
+                    body : JSON.stringify({
+                        name : formState.inputs.name.value,
+                        email:formState.inputs.email.value,
+                        password:formState.inputs.password.value
+                    })})
+                    const responseData = await response.json()
+                    if (!response.ok) {
+                        throw new Error(response.message)
+                    }
+                    console.log(responseData)
+                    setIsLoading(false)
+                    auth.login()
+            } catch (error) {
+                console.error(error);
+                setIsLoading(false)
+                setError(error.message||'something went wrong')
+                
+            }
+        }
+        
+        
     }
     const switchModeHandler=()=>{
         if (!isLoginMode) {
@@ -51,9 +84,14 @@ const AuthUser =()=>{
         }
         setIsLoginMode(prevMode=>!prevMode)
     }
-
+    const errorhandler=()=>{
+        setError(null)
+    }
     return (
+        <React.Fragment>
+            <ErrorModal error ={error} onClear={errorhandler} />
         <Card className="authentication" >
+            {isLoading && <LoadingSpinner asOverlay />}
             <h2>LOGIN</h2>
         <form onSubmit={authSubmitHandler}>
             {!isLoginMode && (<Input
@@ -86,6 +124,7 @@ const AuthUser =()=>{
         </form>
         <Button inverse onClick={switchModeHandler}>{isLoginMode?'SignUp':'Login'}</Button>
         </Card>
+        </React.Fragment>
         
     )
 }

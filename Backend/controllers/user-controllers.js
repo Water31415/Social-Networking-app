@@ -39,13 +39,15 @@ const signUp = async(req,res,next)=>{
     {
       name :name,
       image : "dafafafaf",
-      password: "",
-      places : places
+      password: password,
+      email :email
     }
   )
   try {
     await createdUser.save()
   } catch (error) {
+    console.error(error);
+    
     return next(new HttpError("creating user failed , try again",500))
   }
   res.status(201).json({
