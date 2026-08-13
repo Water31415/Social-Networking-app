@@ -8,14 +8,15 @@ import Button from "../../shared/components/FormElements/Button";
 import "./auth.css"
 import Card from "../../shared/components/UIElements/Card";
 import { AuthContext } from "../../shared/components/context/auth-context";
+import { useHttpClient } from "../../shared/hooks/http-hook";
 
 
 const AuthUser =()=>{
     const auth=useContext(AuthContext)
 
     const[isLoginMode,setIsLoginMode]=useState(true)
-    const [isLoading,setIsLoading]=useState(false)
-    const[error,setError]=useState()
+    
+    const {isLoading,error,sendRequest,clearError}=useHttpClient()
 
     const [formState,titleInputHandler,setFormData]=useForm({
         email :{
@@ -30,39 +31,46 @@ const AuthUser =()=>{
     })
     const authSubmitHandler= async event =>{
         event.preventDefault()
-
         if (isLoginMode) {
-            
+            try {
+                const responseData=await sendRequest(
+                    'http://localhost:5000/api/users/login',
+                    'POST',
+                    JSON.stringify({
+                        email : formState.inputs.email.value,
+                        password: formState.inputs.password.value
+                    }),
+                    {'Content-Type':'application/json'}
+                )
+                auth.login(responseData.user.id)
+                console.log(responseData);
+                
+            } catch (error) {
+                
+            }
+        
         } else {
             try {
-                const response =await fetch('http://localhost:5000/api/users/signup',{
-                    method : 'POST',
-                    headers : {
-                        'Content-Type': 'application/json'
-                    },
-                    body : JSON.stringify({
+                const responseData=await sendRequest('http://localhost:5000/api/users/signup', 'POST',JSON.stringify({
                         name : formState.inputs.name.value,
                         email:formState.inputs.email.value,
                         password:formState.inputs.password.value
-                    })})
-                    const responseData = await response.json()
-                    if (!response.ok) {
-                        throw new Error(response.message)
-                    }
-                    console.log(responseData)
-                    setIsLoading(false)
-                    auth.login()
+                     }),
+                    {
+                        'Content-Type': 'application/json'
+                    },
+                     )
+                    auth.login(responseData.user.id)
             } catch (error) {
-                console.error(error);
-                setIsLoading(false)
-                setError(error.message||'something went wrong')
+
                 
             }
         }
         
         
     }
-    const switchModeHandler=()=>{
+    const switchModeHandler=async event=>{
+        event.preventDefault()
         if (!isLoginMode) {
             setFormData(
                 {
@@ -84,12 +92,10 @@ const AuthUser =()=>{
         }
         setIsLoginMode(prevMode=>!prevMode)
     }
-    const errorhandler=()=>{
-        setError(null)
-    }
+    
     return (
         <React.Fragment>
-            <ErrorModal error ={error} onClear={errorhandler} />
+            <ErrorModal error ={error} onClear={clearError} />
         <Card className="authentication" >
             {isLoading && <LoadingSpinner asOverlay />}
             <h2>LOGIN</h2>

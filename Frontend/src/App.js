@@ -12,15 +12,18 @@ import NewPlace from './places/pages/NewPlaces.js';
 
 
 const App = () => {
+  const [userId,setUserId]=useState(false)
 
   const[isLoggedIn,setIsLoggedIn]=useState(false)
 
-const login=useCallback(()=>{
+const login=useCallback((uid)=>{
   setIsLoggedIn(true)
+  setUserId(uid)
 },[])
 
-const logout=useCallback(()=>{
+const logout=useCallback((uid)=>{
   setIsLoggedIn(false)
+  setUserId(null)
 },[])
 
 let routes
@@ -67,7 +70,8 @@ let routes
     <AuthContext.Provider value={{
       isLoggedIn:isLoggedIn,
       login:login,
-      logout:logout
+      logout:logout,
+      userId:userId
     }}>
     <Router>
       <MainNavigation/>

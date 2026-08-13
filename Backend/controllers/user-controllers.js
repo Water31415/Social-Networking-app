@@ -1,16 +1,7 @@
 const HttpError = require("../models/http-error");
-const httpError=require("../models/http-error");
 const User = require("../models/user")
-const uuid = require("uuid/v4")
+const { validationResult } = require('express-validator');
 
-const DUMMY_USERS = [
-  {
-    id: 'u1',
-    name: 'Max Schwarz',
-    email: 'test@test.com',
-    password: 'testers'
-  }
-];
 
 
 
@@ -40,7 +31,8 @@ const signUp = async(req,res,next)=>{
       name :name,
       image : "dafafafaf",
       password: password,
-      email :email
+      email :email,
+      places :[]
     }
   )
   try {
@@ -60,18 +52,22 @@ const login =async(req,res,next)=>{
     if (!errors.isEmpty()) {
         console.error(errors);
         
-        throw new HttpError("Invalid data entry",422)
+        return next(new  HttpError("Invalid data entry",422))
         
     }
   const {email,password}=req.body
   if(!(email || password)){
-    throw new httpError("Enter all the fields"||404)
+    return next( new HttpError("Enter all the fields"||404))
   }
-  const identifiedUser = User.findOne({email:email})
+  const identifiedUser = await User.findOne({email:email})
 
   if(!identifiedUser||!identifiedUser.password===password){
-    throw new httpError("no valid info",401)
+    return next( new HttpError("user not found or incorrect password",401))
   }
+   res.json({
+    message: 'Logged in!',
+    user: identifiedUser.toObject({ getters: true })
+  })
 
 }
 

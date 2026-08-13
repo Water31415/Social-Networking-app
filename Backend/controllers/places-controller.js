@@ -36,7 +36,7 @@ const createPlace =async(req,res,next)=>{
     const errors=validationResult(req)
     if (!errors.isEmpty()) {
         console.error(errors);
-        
+         
         next( new HttpError("Invalid data entry",422))
         
     }

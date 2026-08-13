@@ -21,6 +21,11 @@ const userSchema = new Schema({
         type : String,
         required : true,
         minLength :6
+    },
+    email :{
+        type : String,
+        required :true,
+        unique :true
     }
 
 },{timestamps:true})
