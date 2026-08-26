@@ -7,31 +7,45 @@ import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 
 const UserPlaces =  props=>{
   const[loadedPlaces,setLoadedPlaces]=useState()
-  const userId = useParams().userId
+  const {userId} = useParams()
   const {clearError,sendRequest,isLoading,error}= useHttpClient()
+  console.log("plscess----->>>>", userId);
 
-  useEffect(()=>{
+  useEffect(() => {
+  const fetchUser = async () => {
     try {
-      const fetchUser=async () => {
-        const responseData=await sendRequest(`http://localhost:5000/api/places/users/${userId}`)
-        setLoadedPlaces(responseData.places)
-      }
+      const responseData = await sendRequest(
+        `http://localhost:5000/api/places/user/${userId}`
+      );
+
+     // console.log("responseData:", responseData);
+      //console.log("responseData1", responseData.place);
+      //console.log("responseData1", responseData.places);
+
+    setLoadedPlaces(responseData.place);
     } catch (error) {
-      
+      console.log(error);
     }
-  },[sendRequest,userId])
+  };
+
+  fetchUser();
+}, [sendRequest, userId]);
+
+  const placeDeleteHandler= (deletedPlaceId)=>{
+    setLoadedPlaces(prevPlaces=>prevPlaces.filter(place=>place.id!==deletedPlaceId))
+  }
     
 
-    return <React.Fragment>
+    return (<React.Fragment>
       <ErrorModal error={error} onClear={clearError} />
       {isLoading && (<div className="center" >
         <LoadingSpinner/>
         </div>)}
-      <PlaceList item={loadedPlaces}/>
+      {!isLoading && loadedPlaces && <PlaceList items={loadedPlaces} onDeletePlace={placeDeleteHandler} />}
           
           
           
           
-          </React.Fragment>
+          </React.Fragment>)
 }
 export default UserPlaces

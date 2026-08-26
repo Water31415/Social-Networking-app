@@ -5,8 +5,9 @@ import PlaceItem from "./PlaceItem";
 import Button from "../../shared/components/FormElements/Button";
 
 const PlaceList = props=>{
-     if (!props.item || props.item.length === 0) {
-        return (<div className="place-list-center">
+    
+      if ((!props.items || props.items.length)=== 0){
+        return (<div className="place-list center">
             <Card>
                 <h2>
                     No places found
@@ -18,18 +19,20 @@ const PlaceList = props=>{
         </div>)
         
      }
-     return <ul className="place-list">
-        {props.item.map(place =><PlaceItem 
+
+     return (<ul className="place-list">
+        {props.items.map(place =>(<PlaceItem 
         key ={place.id} 
         id={place.id} 
-        image ={place.image}
-        tittle = {place.tittle}
+        image ={place.imageUrl}
+        title = {place.title}
         description = {place.description}
         address = {place.address}
-        creatorId = {place.creator}
+        creator = {place.creator}
         coordinates = {place.location}
-          />)}
-     </ul>
+        onDelete = {props.onDeletePlace}
+          />))}
+     </ul>)
 
 }
 export default PlaceList

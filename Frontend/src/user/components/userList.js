@@ -5,7 +5,7 @@ import Card from "../../shared/components/UIElements/Card.js";
 
 
 const UserList = props =>{
-    if(props.items.lenght === 0){
+    if(props.items.length === 0){
         return (
             <Card className="center">
                 <h2>

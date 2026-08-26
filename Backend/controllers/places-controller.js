@@ -37,7 +37,7 @@ const createPlace =async(req,res,next)=>{
     if (!errors.isEmpty()) {
         console.error(errors);
          
-        next( new HttpError("Invalid data entry",422))
+        return next( new HttpError("Invalid data entry",422))
         
     }
     const {title , description ,address,creator}=req.body
@@ -58,12 +58,10 @@ const createPlace =async(req,res,next)=>{
     })
     let user
     try {
-        await User.findById(creator)
-    } catch (err) {
+        user =await User.findById(creator)
+    } catch (error) {
         //console.error(err);
-        
-        const error = new HttpError("creating place failed",500)
-        return next(error)
+        return next(new HttpError("creating place failed",500))
     }
 
     if(!user){
@@ -75,7 +73,7 @@ const createPlace =async(req,res,next)=>{
         await createdPlace.save({session :sess})
         user.places.push(createdPlace)
         await user.save({session :sess})
-        await user.commitTransaction()
+        await sess.commitTransaction()
     } catch (error) {
          //console.error(err);
         return next(new HttpError("creating place failed",500))
@@ -93,11 +91,11 @@ const updatePlace = async(req,res,next)=>{
         throw new HttpError("Invalid data entry",422)
         
     }
-    const {title,description}=req.body
+    const {title,description,address}=req.body
     const placeId = req.params.pid
-    let updatedPlace
+    let place
     try {
-         updatedPlace = await Place.findById(placeId)
+         place = await Place.findById(placeId)
         
     } catch (error) {
         return next(new HttpError("something went wrong",500))
@@ -105,7 +103,7 @@ const updatePlace = async(req,res,next)=>{
     place.title=title,
     place.description=description
     try {
-        await Place.save()
+        await place.save()
     } catch (error) {
         return next(new HttpError("saving failed",500))
     }
@@ -117,21 +115,23 @@ const deletePlace =async(req,res,next)=>{
     try {
          place= await Place.findById(placeId).populate('creator')
     } catch (error) {
+        
+        
         return next(new HttpError("could not find user",404))
     }
     if(!place){
         return next(new HttpError("place does not exits"))
     }
     try{
-        const sess = mongoose.startSession()
-            (await sess).startTransaction()
-            await place.remove({session :sess})
+        const sess = await mongoose.startSession()
+             sess.startTransaction()
+            await place.deleteOne({session :sess})
             place.creator.places.pull(place)
             await place.creator.save({session:sess})
             await sess.commitTransaction()
         }
     catch(error){
-        return next(new HttpError("could not delete user",404))
+        return next(new HttpError("could not delete place",404))
     }
     res.status(200).json({message : 'deleted place'})
 

@@ -1,9 +1,9 @@
 const axios = require("axios")
 const HttpError = require("../models/http-error")
-const API_KEY = "pk.19c506c285d5721fa9bae41d7ea999a4"
+
 
 const getCoordsForAddress= async (address) => {
-    const response = await axios.get(`https://us1.locationiq.com/v1/search?key=${API_KEY}&q=${encodeURIComponent(address)}&format=json`)
+    const response = await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.MAP_API_KEY}&q=${encodeURIComponent(address)}&format=json`)
 
     const data =response.data[0]
     //console.log(data);

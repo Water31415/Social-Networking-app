@@ -37,7 +37,7 @@ let routes
       <Route path ="/:userId/places" exact >
         <UserPlaces/>
       </Route>
-      <Route path = "/places/new" >
+      <Route path = "/places/new" > 
         <NewPlace/>
       </Route>
       <Route path="/places/:placeId">

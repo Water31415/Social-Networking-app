@@ -37,9 +37,9 @@ const NewPlace = ()=>{
         await sendRequest('http://localhost:5000/api/places',
             'POST',
         JSON.stringify({
-            title :formState.input.title.value,
-            description:formState.input.description.value,
-            address:formState.input.description.value,
+            title :formState.inputs.title.value,
+            description:formState.inputs.description.value,
+            address:formState.inputs.address.value,
             creator : auth.userId
         }),
         {'Content-Type':'application/json'}
@@ -67,14 +67,16 @@ const NewPlace = ()=>{
              onInput={titleInputHandler} />
              
             <Input id='description'
-            element ="textara"
+            element ="textarea"
+            type = "text"
              label="Description"
              validators = {[VALIDATOR_MINLENGTH(5)]}
              errorText ="Please enter a valid description" 
              onInput={titleInputHandler} />
 
-             <Input id='address '
+             <Input id='address'
              element ="input"
+             type ="text"
              label="Address"
              validators = {[VALIDATOR_REQUIRE()]}
              errorText ="Please enter a valid address" 

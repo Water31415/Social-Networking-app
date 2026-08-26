@@ -10,13 +10,14 @@ import { useForm } from "../../shared/hooks/form-hooks";
 import { useHttpClient } from "../../shared/hooks/http-hook";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import Card from "../../shared/components/UIElements/Card";
 
 const UpdatePlace =()=>{
     const {auth}=useContext(AuthContext)
     const history = useHistory()
     const{isLoading,sendRequest,error,clearError}=useHttpClient()
     const[loadedPlaces,setLoadedPlaces]=useState()
-    const {placeId} = useParams().placeId
+    const {placeId} = useParams()
 
     const [formState,titleInputHandler ,setFormData]=useForm({
         title:{
@@ -27,48 +28,51 @@ const UpdatePlace =()=>{
             value:'',
             isValid:false
         }
+
     },false)
       
       useEffect(()=>{
+        const fetchUser = async () => {
        try {
          
-             const fetchUser = async () => {
+             
                  const responseData = await sendRequest(`http://localhost:5000/api/places/${placeId}`)
                      
-                 setLoadedPlaces(responseData.places)
+                 setLoadedPlaces(responseData.place)
                  setFormData({
               title:{
-                 value:responseData.places.title,
+                 value:responseData.place.title,
                  isValid:true
              },
              description:{
-             value:responseData.places.description,
-             isValid:true
-         }
+             value:responseData.place.description,
+             isValid:true}
          },true)
          
-       }} catch (error) {
+       } catch (error) {
         
-       }
+       }}
+       fetchUser()
      
       
 
 },[setFormData,sendRequest,placeId])
 
-    const placeUpdateSubmitHandler= async()=>{
-
+    const placeUpdateSubmitHandler= async event=>{
+        event.preventDefault()
         try {
             
                 await sendRequest(`http://localhost:5000/api/places/${placeId}`,
                     'PATCH',
                     JSON.stringify({
-                        title : formState.input.title.value,
-                        description : formState.input.description.value
+                        title : formState.inputs.title.value,
+                        description : formState.inputs.description.value
                     }),
                     {'Content-Type': 'application/json'}
                 )
                 
                 history.push('/'+  auth.userId + '/places')
+                console.log(formState);
 
             
         } catch (error) {
@@ -76,26 +80,36 @@ const UpdatePlace =()=>{
         }
     }   
 
-  if(!isLoading){
+  if(isLoading){
+    
+    
         return(
+            
             <div className="center">
-                <h2>Loading...</h2>
+                <LoadingSpinner/>
             </div>
 
         )
     }
-    if (!loadedPlaces) {
+    if (!loadedPlaces &&!error ) {
+    
         return(
+        
             <div className="center">
-                <LoadingSpinner/>
+                <Card>
+                    <h2>
+                        Could not find place
+                    </h2>
+                </Card>
             </div>
         )
         
     }
   
-    return ( <React.Fragment>
+    return ( 
+    <React.Fragment>
         <ErrorModal error={error} onClear={clearError} />
-        {!isLoading && loadedPlaces && (<form className="place-form">
+        {!isLoading && loadedPlaces && (<form className="place-form" onSubmit={placeUpdateSubmitHandler} >
             <Input
             id="title"
             element ="input"

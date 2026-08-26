@@ -38,7 +38,7 @@ const signUp = async(req,res,next)=>{
   try {
     await createdUser.save()
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     
     return next(new HttpError("creating user failed , try again",500))
   }

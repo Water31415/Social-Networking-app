@@ -15,7 +15,7 @@ router.post("/",[
     check('address').not().isEmpty()],placesControllers.createPlace)
 
 router.patch("/:pid",[check('title').not().isEmpty(),
-    check('description').isLength({min:3})
+    check('description').isLength({min:3},check('address').not().isEmpty())
 ],placesControllers.updatePlace)
 
 router.delete("/:pid",placesControllers.deletePlace)

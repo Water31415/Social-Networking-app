@@ -38,7 +38,8 @@ export const useForm=(intitalInputs,intitalFormValidity)=>{
         isValid:intitalFormValidity
     })
  const titleInputHandler=useCallback((id,value,isValid)=>{
-        dispatch({type:'INPUT_CHANGE'
+        dispatch({
+            type:'INPUT_CHANGE'
             ,value:value
             ,isValid:isValid
             ,inputId:id

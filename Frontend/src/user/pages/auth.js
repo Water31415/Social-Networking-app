@@ -43,7 +43,6 @@ const AuthUser =()=>{
                     {'Content-Type':'application/json'}
                 )
                 auth.login(responseData.user.id)
-                console.log(responseData);
                 
             } catch (error) {
                 
