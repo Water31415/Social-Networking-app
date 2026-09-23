@@ -1,4 +1,6 @@
 const bodyParser = require("body-parser")
+const path=require('path')
+const fs = require('fs')
 require('dotenv').config();
 const mongoose =require("mongoose")
 const cors = require("cors");
@@ -22,6 +24,7 @@ app.use(
   })
 );
 
+app.use('uploads/images',express.static(path.join('uploads','images')))
 
 
 app.use('/api/places',placesRoutes)
@@ -32,6 +35,12 @@ app.use((req,res,next)=>{
 })
 
 app.use((error,req,res,next)=>{
+    if(req.file){
+        fs.unlink(req.file.path,err=>{
+            console.error(err);
+            
+        })
+    }
     if(res.headerSent){
         return next(error)
     }
@@ -42,7 +51,7 @@ app.use((error,req,res,next)=>{
 mongoose.connect(  
 `${process.env.DATABASE_API_KEY}`
 ).then(()=>{
-    app.listen(5000)}
+    app.listen(process.env.PORT || 5000)}
 ).catch(err=>{
     console.error(err);
     

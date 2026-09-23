@@ -1,7 +1,8 @@
 const HttpError = require("../models/http-error");
 const User = require("../models/user")
 const { validationResult } = require('express-validator');
-
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 
 
@@ -26,11 +27,19 @@ const signUp = async(req,res,next)=>{
   if(existingUser){
     return next(new HttpError("User already exist,try diff email",500))
   }
+
+  let hashedPassword
+  try {
+    hashedPassword= await bcrypt.hash(password,12)
+  } catch (error) {
+    return next(new HttpError('couldnot create user try again',500))
+    
+  }
   const createdUser = new User(
     {
       name :name,
-      image : "dafafafaf",
-      password: password,
+      image : req.file.path,
+      password: hashedPassword,
       email :email,
       places :[]
     }
@@ -42,10 +51,18 @@ const signUp = async(req,res,next)=>{
     
     return next(new HttpError("creating user failed , try again",500))
   }
+  let token
+  try {
+    token = jwt.sign(
+      {userId : createdUser.id , email : createdUser.email},`${process.env.JWT_API_KEY}`,{expiresIn :'1h'})
+  } catch (error) {
+    return next(new HttpError("creating user failed , try again",500))
+  }
+
   res.status(201).json({
-    user: createdUser.toObject({getters:true})
-  })
-}
+    userId : createdUser.id ,email:createdUser.email , token :token})
+  }
+  
 
 const login =async(req,res,next)=>{
   const errors=validationResult(req)
@@ -61,12 +78,31 @@ const login =async(req,res,next)=>{
   }
   const identifiedUser = await User.findOne({email:email})
 
-  if(!identifiedUser||!identifiedUser.password===password){
+  if(!identifiedUser){
     return next( new HttpError("user not found or incorrect password",401))
   }
+  let isValidPassword= false
+  try {
+    isValidPassword= await bcrypt.compare(password,identifiedUser.password)
+
+  } catch (error) {
+    return next(new HttpError('password is incorrect',500))
+  }
+  if(!isValidPassword){
+     return next( new HttpError("could not login",401))
+  }
+  let token 
+  try {
+    token = jwt.sign({
+      userId:identifiedUser.id, email :identifiedUser.email
+    },`${process.env.JWT_API_KEY}`,{expiresIn:'1h'})
+  } catch (error) {
+     return next(new HttpError("creating user failed , try again",500))
+  }
    res.json({
-    message: 'Logged in!',
-    user: identifiedUser.toObject({ getters: true })
+    userId :identifiedUser.id,
+    email :identifiedUser.email,
+    token:token
   })
 
 }

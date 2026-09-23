@@ -1,3 +1,4 @@
+const fs=require('fs')
 const uuid = require('uuid/v4')
 const mongoose = require("mongoose")
 const {validationResult}=require('express-validator')
@@ -5,6 +6,7 @@ const HttpError = require('../models/http-error')
 const getCoordsForAddress = require('../utils/location')
 const Place =require("../models/places")
 const User = require("../models/user")
+const { log } = require('console')
 
 
 
@@ -40,7 +42,7 @@ const createPlace =async(req,res,next)=>{
         return next( new HttpError("Invalid data entry",422))
         
     }
-    const {title , description ,address,creator}=req.body
+    const {title , description ,address}=req.body
 
     let coordinates; 
     try {
@@ -53,12 +55,12 @@ const createPlace =async(req,res,next)=>{
         description :description,
         address :address,
         location:coordinates,
-        image :"https://www.bucketlistly.blog/posts/best-free-travel-images",
-        creator:creator
+        image :req.file.path,
+        creator:req.userData.userId
     })
     let user
     try {
-        user =await User.findById(creator)
+        user =await User.findById(req.userData.userId)
     } catch (error) {
         //console.error(err);
         return next(new HttpError("creating place failed",500))
@@ -91,7 +93,7 @@ const updatePlace = async(req,res,next)=>{
         throw new HttpError("Invalid data entry",422)
         
     }
-    const {title,description,address}=req.body
+    const {title,description}=req.body
     const placeId = req.params.pid
     let place
     try {
@@ -99,6 +101,11 @@ const updatePlace = async(req,res,next)=>{
         
     } catch (error) {
         return next(new HttpError("something went wrong",500))
+    }
+    console.log(req.userData);
+    
+    if (place.creator.toString() !== req.userData.userId ) {
+        return next(new HttpError('not allowed to edit this place',401))
     }
     place.title=title,
     place.description=description
@@ -122,6 +129,13 @@ const deletePlace =async(req,res,next)=>{
     if(!place){
         return next(new HttpError("place does not exits"))
     }
+    if (place.creator.id !== req.userData.userId ) {
+        return next(new HttpError('not allowed to edit this place',401))
+    }
+    
+
+    const imagePath=place.image
+
     try{
         const sess = await mongoose.startSession()
              sess.startTransaction()
@@ -133,6 +147,10 @@ const deletePlace =async(req,res,next)=>{
     catch(error){
         return next(new HttpError("could not delete place",404))
     }
+    fs.unlink(imagePath, err=>{
+        console.error(err);
+        
+    })
     res.status(200).json({message : 'deleted place'})
 
 }
