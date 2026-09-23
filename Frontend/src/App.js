@@ -1,4 +1,4 @@
-import React,{useState,useCallback} from 'react';
+import React,{Suspense} from 'react';
 import {BrowserRouter as Router , Route ,Redirect, Switch} from 'react-router-dom'
 import User from './user/pages/user.js';
 import Places from './places/pages/NewPlaces.js'
@@ -8,27 +8,26 @@ import UserPlaces from './places/pages/UserPlaces.js';
 import UpdatePlace from './places/pages/UpdatePlace.js';
 import { AuthContext } from './shared/components/context/auth-context.js';
 import NewPlace from './places/pages/NewPlaces.js';
+import { CheckAuth } from './shared/hooks/auth-hook.js';
+import LoadingSpinner from './shared/components/UIElements/LoadingSpinner.js';
+
+//const User = React.lazy(()=> import('./user/pages/user.js'))
+//const Places = React.lazy(()=> import('./places/pages/NewPlaces.js'))
+//const AuthUser = React.lazy(()=> import('./user/pages/auth.js'))
+//const UserPlaces = React.lazy(()=> import('./places/pages/UserPlaces.js'))
+//const UpdatePlace = React.lazy(()=> import('./places/pages/UpdatePlace.js'))
+//const NewPlace = React.lazy(()=> import('./places/pages/NewPlaces.js'))
 
 
 
 const App = () => {
-  const [userId,setUserId]=useState(false)
 
-  const[isLoggedIn,setIsLoggedIn]=useState(false)
-
-const login=useCallback((uid)=>{
-  setIsLoggedIn(true)
-  setUserId(uid)
-},[])
-
-const logout=useCallback((uid)=>{
-  setIsLoggedIn(false)
-  setUserId(null)
-},[])
+const {login,logout,token,userId}= CheckAuth() 
 
 let routes
+console.log(token);
 
-  if (isLoggedIn) {
+  if (token) {
     routes=(
       <Switch>
       <Route path = "/" exact>
@@ -68,7 +67,8 @@ let routes
 
   return (
     <AuthContext.Provider value={{
-      isLoggedIn:isLoggedIn,
+      isLoggedIn:!!token,
+      token :token,
       login:login,
       logout:logout,
       userId:userId
@@ -76,6 +76,7 @@ let routes
     <Router>
       <MainNavigation/>
         <main>
+          <Suspense fallback={<div className='center' > <LoadingSpinner/></div>} ></Suspense>
           {routes}
         </main>
   </Router>

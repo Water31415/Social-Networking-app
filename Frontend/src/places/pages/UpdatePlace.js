@@ -4,7 +4,7 @@ import { AuthContext } from "../../shared/components/context/auth-context";
 import { useParams,useHistory } from "react-router-dom";  
 import Input from "../../shared/components/FormElements/Input"
 import Button from "../../shared/components/FormElements/Button";
-import { validate, VALIDATOR_MINLENGTH, VALIDATOR_REQUIRE } from "../../shared/Utils/Validators";
+import { VALIDATOR_MINLENGTH, VALIDATOR_REQUIRE } from "../../shared/Utils/Validators";
 import "./PlaceForm.css"
 import { useForm } from "../../shared/hooks/form-hooks";
 import { useHttpClient } from "../../shared/hooks/http-hook";
@@ -13,7 +13,7 @@ import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import Card from "../../shared/components/UIElements/Card";
 
 const UpdatePlace =()=>{
-    const {auth}=useContext(AuthContext)
+    const auth=useContext(AuthContext)
     const history = useHistory()
     const{isLoading,sendRequest,error,clearError}=useHttpClient()
     const[loadedPlaces,setLoadedPlaces]=useState()
@@ -36,7 +36,7 @@ const UpdatePlace =()=>{
        try {
          
              
-                 const responseData = await sendRequest(`http://localhost:5000/api/places/${placeId}`)
+                 const responseData = await sendRequest(`${process.env.REACT_APP_BACKEND_URL}api/places/${placeId}`)
                      
                  setLoadedPlaces(responseData.place)
                  setFormData({
@@ -60,23 +60,27 @@ const UpdatePlace =()=>{
 
     const placeUpdateSubmitHandler= async event=>{
         event.preventDefault()
+ 
         try {
             
-                await sendRequest(`http://localhost:5000/api/places/${placeId}`,
+                await sendRequest(`${process.env.REACT_APP_BACKEND_URL}api/places/${placeId}`,
                     'PATCH',
                     JSON.stringify({
                         title : formState.inputs.title.value,
                         description : formState.inputs.description.value
                     }),
-                    {'Content-Type': 'application/json'}
+                    {'Content-Type': 'application/json',Authorization : 'Bearer '+ auth.token }
+                    
+                    
                 )
+                
                 
                 history.push('/'+  auth.userId + '/places')
                 console.log(formState);
 
             
         } catch (error) {
-            
+            console.log(error);
         }
     }   
 

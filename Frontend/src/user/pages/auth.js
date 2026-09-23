@@ -9,6 +9,7 @@ import "./auth.css"
 import Card from "../../shared/components/UIElements/Card";
 import { AuthContext } from "../../shared/components/context/auth-context";
 import { useHttpClient } from "../../shared/hooks/http-hook";
+import ImageUpload from "../../shared/components/FormElements/imageUpload";
 
 
 const AuthUser =()=>{
@@ -34,7 +35,7 @@ const AuthUser =()=>{
         if (isLoginMode) {
             try {
                 const responseData=await sendRequest(
-                    'http://localhost:5000/api/users/login',
+                    `${process.env.REACT_APP_BACKEND_URL}api/users/login`,
                     'POST',
                     JSON.stringify({
                         email : formState.inputs.email.value,
@@ -42,7 +43,7 @@ const AuthUser =()=>{
                     }),
                     {'Content-Type':'application/json'}
                 )
-                auth.login(responseData.user.id)
+                auth.login(responseData.userId,responseData.token)
                 
             } catch (error) {
                 
@@ -50,16 +51,15 @@ const AuthUser =()=>{
         
         } else {
             try {
-                const responseData=await sendRequest('http://localhost:5000/api/users/signup', 'POST',JSON.stringify({
-                        name : formState.inputs.name.value,
-                        email:formState.inputs.email.value,
-                        password:formState.inputs.password.value
-                     }),
-                    {
-                        'Content-Type': 'application/json'
-                    },
+                const formData = new FormData()
+                formData.append('email',formState.inputs.email.value)
+                formData.append('name',formState.inputs.name.value)
+                formData.append('password',formState.inputs.password.value)
+                formData.append('image',formState.inputs.image.value)
+                const responseData=await sendRequest(process.env.REACT_APP_BACKEND_URL+ 'api/users/signup', 'POST',
+                    formData,{Authorization : 'Bearer '+ auth.token}
                      )
-                    auth.login(responseData.user.id)
+                    auth.login(responseData.userId , responseData.token)
             } catch (error) {
 
                 
@@ -74,7 +74,8 @@ const AuthUser =()=>{
             setFormData(
                 {
                     ...formState.inputs,
-                    name :undefined
+                    name :undefined,
+                    image:undefined
                 },
                 formState.inputs.password.isValid && formState.inputs.email.isValid
             )
@@ -85,6 +86,10 @@ const AuthUser =()=>{
                 name:{
                     value :'',
                     isValid :false
+                },
+                image:{
+                    value:null,
+                    isValid:false
                 }
             },false)
             
@@ -108,7 +113,7 @@ const AuthUser =()=>{
                 errorText="Please enter a name"
                 onInput ={titleInputHandler}
             />)}
-
+            {!isLoginMode && <ImageUpload center id="image" onInput={titleInputHandler}/> }
             <Input id="email"
             element ="input"
              type="email" 

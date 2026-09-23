@@ -9,8 +9,10 @@ import { useHttpClient } from "../../shared/hooks/http-hook";
 import { AuthContext } from "../../shared/components/context/auth-context";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import Avatar from "../../shared/components/UIElements/Avatar";
+import ImageUpload from "../../shared/components/FormElements/imageUpload";
 
-const NewPlace = ()=>{
+const NewPlace = props=>{
     const auth=useContext(AuthContext)
     const {isLoading,sendRequest,error,clearError}= useHttpClient()
     const [formState,titleInputHandler]=useForm(
@@ -34,16 +36,16 @@ const NewPlace = ()=>{
      const placeSubmitHandler = async event => {
     event.preventDefault();
     try {
-        await sendRequest('http://localhost:5000/api/places',
+        const formData = new FormData()
+        formData.append('title',formState.inputs.title.value)
+        formData.append('description',formState.inputs.description.value)
+        formData.append('address',formState.inputs.address.value)
+        formData.append('image',formState.inputs.image.value)
+        await sendRequest(`${process.env.REACT_APP_BACKEND_URL}api/places`,
             'POST',
-        JSON.stringify({
-            title :formState.inputs.title.value,
-            description:formState.inputs.description.value,
-            address:formState.inputs.address.value,
-            creator : auth.userId
-        }),
-        {'Content-Type':'application/json'}
-        
+        formData ,{
+            Authorization : 'Bearer ' + auth.token
+        }
     )
     history.push('/')
     } catch (error) {
@@ -65,6 +67,8 @@ const NewPlace = ()=>{
              validators = {[VALIDATOR_REQUIRE()]}
              errorText ="Please enter a valid title" 
              onInput={titleInputHandler} />
+             <ImageUpload center id="image" onInput={titleInputHandler}/>
+        
              
             <Input id='description'
             element ="textarea"
