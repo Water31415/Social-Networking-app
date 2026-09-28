@@ -4,6 +4,7 @@
 
 .place-item__content {
   padding: 0;
+  max-width: 40rem !important;
 }
 
 .place-item__info {

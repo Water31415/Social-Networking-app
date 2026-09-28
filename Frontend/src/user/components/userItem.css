@@ -1,7 +1,9 @@
 .user-item {
   margin: 1rem;
-  width: calc(45% - 2rem);
+  width: 20rem;
   min-width: 17.5rem;
+  max-width: 35rem;
+  list-style: none;
 }
 
 .user-item a {
@@ -28,6 +30,7 @@
   width: 4rem;
   height: 4rem;
   margin-right: 1rem;
+  
 }
 
 .user-item__info h2 {

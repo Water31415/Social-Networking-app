@@ -25,7 +25,7 @@ const App = () => {
 const {login,logout,token,userId}= CheckAuth() 
 
 let routes
-console.log(token);
+
 
   if (token) {
     routes=(

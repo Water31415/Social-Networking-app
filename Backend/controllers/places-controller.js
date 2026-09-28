@@ -55,7 +55,7 @@ const createPlace =async(req,res,next)=>{
         description :description,
         address :address,
         location:coordinates,
-        image :req.file.path,
+        image :`/uploads/images/${req.file.filename}`,
         creator:req.userData.userId
     })
     let user

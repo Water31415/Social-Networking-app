@@ -1,26 +1,49 @@
-import React,{useRef , useEffect} from "react";
-import "./Map.css"
-import * as L from './leaflet-src.esm';
-import './leaflet.css';
+import React, { useRef, useEffect } from "react";
+import "./Map.css";
+import * as L from "./leaflet-src.esm";
+import "./leaflet.css";
 
 const Map = props => {
+    const mapRef = useRef(null);
 
-    const mapRef = useRef()
+    const { center, zoom } = props;
 
-    const{center,zoom} = props
-    useEffect(()=>{
-        var map = L.map(mapRef.current, {
-    center: center,
-    zoom: zoom
+    useEffect(() => {
+
+        const map = L.map(mapRef.current, {
+            center: center,
+            zoom: zoom
         });
-    L.marker(center).addTo(map);
-    },[center,zoom])
 
-    
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+        const markerIcon = L.icon({
+    iconUrl: '/images/marker-icon.png',
+    iconRetinaUrl: '/images/marker-icon-2x.png',
+    shadowUrl: '/images/marker-shadow.png',
 
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
 
-    return <div ref={mapRef} className={`map ${props.className}`} style={props.style}></div>
+        L.marker(center, { icon: markerIcon }).addTo(map);
 
-}
+        return () => {
+            map.remove();
+        };
 
-export default Map
+    }, [center, zoom]);
+
+    return (
+        <div
+            ref={mapRef}
+            className={`map ${props.className || ""}`}
+            style={props.style}
+        />
+    );
+};
+
+export default Map;

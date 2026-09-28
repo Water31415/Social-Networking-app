@@ -9,7 +9,6 @@ const UserPlaces =  props=>{
   const[loadedPlaces,setLoadedPlaces]=useState()
   const {userId} = useParams()
   const {clearError,sendRequest,isLoading,error}= useHttpClient()
-  console.log("plscess----->>>>", userId);
 
   useEffect(() => {
   const fetchUser = async () => {
@@ -18,9 +17,6 @@ const UserPlaces =  props=>{
         `${process.env.REACT_APP_BACKEND_URL}api/places/user/${userId}`
       );
 
-     // console.log("responseData:", responseData);
-      //console.log("responseData1", responseData.place);
-      //console.log("responseData1", responseData.places);
 
     setLoadedPlaces(responseData.place);
     } catch (error) {
