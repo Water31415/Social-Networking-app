@@ -9,14 +9,16 @@ import "./PlaceForm.css"
 import { useForm } from "../../shared/hooks/form-hooks";
 import { useHttpClient } from "../../shared/hooks/http-hook";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
-import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import { LoadingText } from '../../shared/components/UI';
 import Card from "../../shared/components/UIElements/Card";
+import { backendUrl } from "../../shared/Utils/backend-url";
 
 const UpdatePlace =()=>{
     const auth=useContext(AuthContext)
     const history = useHistory()
     const{isLoading,sendRequest,error,clearError}=useHttpClient()
     const[loadedPlaces,setLoadedPlaces]=useState()
+    const[placeLookupComplete,setPlaceLookupComplete]=useState(false)
     const {placeId} = useParams()
 
     const [formState,titleInputHandler ,setFormData]=useForm({
@@ -36,7 +38,7 @@ const UpdatePlace =()=>{
        try {
          
              
-                 const responseData = await sendRequest(`${process.env.REACT_APP_BACKEND_URL}api/places/${placeId}`)
+                 const responseData = await sendRequest(backendUrl(`api/places/${placeId}`))
                      
                  setLoadedPlaces(responseData.place)
                  setFormData({
@@ -50,7 +52,8 @@ const UpdatePlace =()=>{
          },true)
          
        } catch (error) {
-        
+       } finally {
+          setPlaceLookupComplete(true)
        }}
        fetchUser()
      
@@ -63,7 +66,7 @@ const UpdatePlace =()=>{
  
         try {
             
-                await sendRequest(`${process.env.REACT_APP_BACKEND_URL}api/places/${placeId}`,
+                await sendRequest(backendUrl(`api/places/${placeId}`),
                     'PATCH',
                     JSON.stringify({
                         title : formState.inputs.title.value,
@@ -84,35 +87,11 @@ const UpdatePlace =()=>{
         }
     }   
 
-  if(isLoading){
-    
-    
-        return(
-            
-            <div className="center">
-                <LoadingSpinner/>
-            </div>
-
-        )
-    }
-    if (!loadedPlaces &&!error ) {
-    
-        return(
-        
-            <div className="center">
-                <Card>
-                    <h2>
-                        Could not find place
-                    </h2>
-                </Card>
-            </div>
-        )
-        
-    }
-  
     return ( 
     <React.Fragment>
         <ErrorModal error={error} onClear={clearError} />
+        <LoadingText isLoading={!placeLookupComplete || isLoading} text="place" />
+        {placeLookupComplete && !loadedPlaces && !error && <div className="center"><Card><h2>Could not find place</h2></Card></div>}
         {!isLoading && loadedPlaces && (<form className="place-form" onSubmit={placeUpdateSubmitHandler} >
             <Input
             id="title"
@@ -140,4 +119,4 @@ const UpdatePlace =()=>{
   </React.Fragment>  )
 }
 
-export default UpdatePlace   
+export default UpdatePlace

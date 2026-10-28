@@ -1,0 +1,53 @@
+.places-page {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - 4rem);
+}
+
+.places-page--with-create {
+  display: grid;
+  grid-template-columns: minmax(17rem, 23rem) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.25rem, 2.2vw, 2rem);
+  width: min(100%, 1500px);
+  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 1.75rem) clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.places-page__create {
+  position: sticky;
+  top: 1.25rem;
+  min-width: 0;
+  align-self: start;
+}
+
+.places-page__feed {
+  min-width: 0;
+}
+
+.places-page--with-create .place-list {
+  width: 100%;
+  max-width: 1180px;
+}
+
+.places-location-error {
+  width: min(90%, 72rem);
+  margin: -0.5rem auto 1rem;
+  color: #ff9aa8;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .places-page--with-create {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .places-page__create {
+    position: static;
+  }
+
+  .add-place-options {
+    min-height: 0;
+  }
+}
+

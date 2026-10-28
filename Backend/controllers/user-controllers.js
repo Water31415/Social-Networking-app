@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken')
 const getUser =async(req,res,next)=>{
   let users  
   try {
-     users = await User.find({},"-password")
+     users = await User.find({},"-password -followers -following")
     } catch (error) {
       return next(new HttpError("Fetching user failed , try again ",500))
     }
@@ -18,12 +18,43 @@ const getUser =async(req,res,next)=>{
     
 }
 
+const followUser = async (req, res, next) => {
+  const followerId = req.userData.userId
+  const targetId = req.params.uid
+  if (followerId === targetId) return next(new HttpError('You cannot follow yourself', 422))
+  try {
+    const [target, follower] = await Promise.all([User.findById(targetId), User.findById(followerId)])
+    if (!target || !follower) return next(new HttpError('User not found', 404))
+    await Promise.all([
+      User.updateOne({ _id: targetId }, { $addToSet: { followers: followerId } }),
+      User.updateOne({ _id: followerId }, { $addToSet: { following: targetId } })
+    ])
+    res.json({ following: true })
+  } catch (error) { return next(new HttpError('Could not follow user', 500)) }
+}
+
+const unfollowUser = async (req, res, next) => {
+  const followerId = req.userData.userId
+  const targetId = req.params.uid
+  try {
+    await Promise.all([
+      User.updateOne({ _id: targetId }, { $pull: { followers: followerId } }),
+      User.updateOne({ _id: followerId }, { $pull: { following: targetId } })
+    ])
+    res.json({ following: false })
+  } catch (error) { return next(new HttpError('Could not unfollow user', 500)) }
+}
+
 const signUp = async(req,res,next)=>{
   const {name,email,password}=req.body
-  if(!(name && email && password)){
-    next( new httpError("Enter all the fields",404))
+  const errors=validationResult(req)
+  if (!errors.isEmpty()) return next(new HttpError("Invalid data entry",422))
+  if(!(name && email && password && req.file)){
+    return next(new HttpError("Enter all fields and select a profile image",422))
   }
-  const existingUser = await User.findOne({email :email})
+  let existingUser
+  try { existingUser = await User.findOne({email :email}) }
+  catch (error) { return next(new HttpError("Could not verify the account",500)) }
   if(existingUser){
     return next(new HttpError("User already exist,try diff email",500))
   }
@@ -38,7 +69,7 @@ const signUp = async(req,res,next)=>{
   const createdUser = new User(
     {
       name :name,
-      image : `/uploads/images/${req.file.filename}`,
+    image : `/uploads/images/${req.file.filename}`,
       password: hashedPassword,
       email :email,
       places :[]
@@ -73,10 +104,12 @@ const login =async(req,res,next)=>{
         
     }
   const {email,password}=req.body
-  if(!(email || password)){
-    return next( new HttpError("Enter all the fields"||404))
+  if(!(email && password)){
+    return next(new HttpError("Enter all the fields",422))
   }
-  const identifiedUser = await User.findOne({email:email})
+  let identifiedUser
+  try { identifiedUser = await User.findOne({email:email}) }
+  catch (error) { return next(new HttpError("Could not find account",500)) }
 
   if(!identifiedUser){
     return next( new HttpError("user not found or incorrect password",401))
@@ -110,3 +143,5 @@ const login =async(req,res,next)=>{
 exports.signUp=signUp
 exports.login=login
 exports.getUser=getUser
+exports.followUser=followUser
+exports.unfollowUser=unfollowUser

@@ -1,55 +1,67 @@
 .button {
   font: inherit;
-  padding: 0.5rem 1.5rem;
-  border: 1px solid #ff0055;
-  border-radius: 4px;
-  background: #ff0055;
+  min-height: 2.75rem;
+  padding: 0.62rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #a855f7, #8539d7);
   color: white;
   cursor: pointer;
-  margin-right: 1rem;
+  margin-right: 0.5rem;
   text-decoration: none;
-  display: inline-block;
-}
-
-.button:focus {
-  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  box-shadow: 0 5px 16px rgba(168, 85, 247, 0.17), inset 0 1px rgba(255,255,255,.1);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .button:hover,
 .button:active {
-  background: #ff4382;
-  border-color: #ff4382;
+  background: linear-gradient(135deg, #b66bf7, #933be7);
+  border-color: var(--accent-hover);
+  box-shadow: 0 7px 20px rgba(168, 85, 247, 0.27);
+  transform: translateY(-1px);
 }
 
+.button:active:not(:disabled) { transform: translateY(0) scale(.98); }
+.button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+
 .button--inverse {
-  background: transparent;
-  color: #ff0055;
+  border-color: rgba(192,132,252,.45);
+  background: rgba(168,85,247,.07);
+  color: #c084fc;
 }
 
 .button--inverse:hover,
 .button--inverse:active {
   color: white;
-  background: #ff0055;
+  background: var(--accent);
 }
 
 .button--danger {
-  background: #830000;
-  border-color: #830000;
+  background: linear-gradient(135deg, #b83253, #92253f);
+  border-color: #a52846;
 }
 
 .button--danger:hover,
 .button--danger:active {
-  background: #f34343;
-  border-color: #f34343;
+  background: linear-gradient(135deg, #d84a68, #ac2d4b);
+  border-color: #c43d59;
 }
 
 .button:disabled,
 .button:hover:disabled,
 .button:active:disabled {
-  background: #ccc;
-  color: #979797;
-  border-color: #ccc;
+  background: #303a46;
+  color: #8b98a7;
+  border-color: #303a46;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .button--small {
@@ -58,4 +70,8 @@
 
 .button--big {
   font-size: 1.5rem;
+}
+
+.button--inverse {
+  box-shadow: none;
 }

@@ -1,15 +1,16 @@
 import React,{useState,useContext} from "react";
 import Input from "../../shared/components/FormElements/Input";
 import { useForm } from "../../shared/hooks/form-hooks";
-import {VALIDATOR_REQUIRE,VALIDATOR_EMAIL} from "../../shared/Utils/Validators"
+import {VALIDATOR_REQUIRE,VALIDATOR_EMAIL,VALIDATOR_MINLENGTH} from "../../shared/Utils/Validators"
 import ErrorModal from "../../shared/components/UIElements/ErrorModal"
-import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner"
+import { LoadingText } from '../../shared/components/UI'
 import Button from "../../shared/components/FormElements/Button";
 import "./auth.css"
 import Card from "../../shared/components/UIElements/Card";
 import { AuthContext } from "../../shared/components/context/auth-context";
 import { useHttpClient } from "../../shared/hooks/http-hook";
 import ImageUpload from "../../shared/components/FormElements/imageUpload";
+import { backendUrl } from "../../shared/Utils/backend-url";
 
 
 const AuthUser =()=>{
@@ -35,7 +36,7 @@ const AuthUser =()=>{
         if (isLoginMode) {
             try {
                 const responseData=await sendRequest(
-                    `${process.env.REACT_APP_BACKEND_URL}api/users/login`,
+                    backendUrl('api/users/login'),
                     'POST',
                     JSON.stringify({
                         email : formState.inputs.email.value,
@@ -56,7 +57,7 @@ const AuthUser =()=>{
                 formData.append('name',formState.inputs.name.value)
                 formData.append('password',formState.inputs.password.value)
                 formData.append('image',formState.inputs.image.value)
-                const responseData=await sendRequest(process.env.REACT_APP_BACKEND_URL+ 'api/users/signup', 'POST',
+                const responseData=await sendRequest(backendUrl('api/users/signup'), 'POST',
                     formData,{Authorization : 'Bearer '+ auth.token}
                      )
                     auth.login(responseData.userId , responseData.token)
@@ -101,7 +102,7 @@ const AuthUser =()=>{
         <React.Fragment>
             <ErrorModal error ={error} onClear={clearError} />
         <Card className="authentication" >
-            {isLoading && <LoadingSpinner asOverlay />}
+            <LoadingText isLoading={isLoading} asOverlay text="your account" />
             <h2>LOGIN</h2>
         <form onSubmit={authSubmitHandler}>
             {!isLoginMode && (<Input
@@ -126,7 +127,7 @@ const AuthUser =()=>{
             element ="input"
              type="password" 
              label="Password"
-             validators = {[VALIDATOR_REQUIRE()]}
+             validators = {[VALIDATOR_REQUIRE(), ...(isLoginMode ? [] : [VALIDATOR_MINLENGTH(6)])]}
              errorText ="Please enter password" 
              onInput={titleInputHandler} />
         

@@ -1,0 +1,28 @@
+const express = require('express')
+const { check } = require('express-validator')
+const tripsController = require('../controllers/trips-controller')
+const fileUpload = require('../middleware/file-upload')
+const checkAuth = require('../middleware/check-auth')
+
+const router = express.Router()
+router.use(checkAuth)
+
+router.post('/start', tripsController.startTrip)
+router.post('/location/reverse-geocode', tripsController.reverseGeocode)
+router.get('/active', tripsController.getActiveTrip)
+router.get('/feed', tripsController.getFeed)
+router.get('/user/:uid', tripsController.getUserTrips)
+router.post('/:tid/like', tripsController.toggleTripLike)
+router.post('/:tid/comments', [check('text').trim().not().isEmpty().isLength({ max: 1000 })], tripsController.addTripComment)
+router.post('/:tid/share', tripsController.shareTrip)
+router.get('/:tid', tripsController.getTrip)
+router.post('/:tid/stops', fileUpload.array('images', 10), tripsController.addStop)
+router.patch('/:tid/stops/:sid', fileUpload.array('images', 10), tripsController.updateStop)
+router.delete('/:tid/stops/:sid', tripsController.deleteStop)
+router.patch('/:tid/stop', tripsController.endTrip)
+router.patch('/:tid/resume', tripsController.resumeTrip)
+router.patch('/:tid/publish', fileUpload.single('coverImage'), tripsController.publishTrip)
+router.patch('/:tid', tripsController.updateTrip)
+router.delete('/:tid', tripsController.deleteTrip)
+
+module.exports = router

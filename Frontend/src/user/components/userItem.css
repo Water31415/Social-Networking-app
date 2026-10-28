@@ -13,38 +13,45 @@
   height: 100%;
   text-decoration: none;
   padding: 1rem;
-  color: white;
-  background: #292929;
+  color: var(--text-primary);
+  background: var(--card-background);
+  border-radius: var(--radius-card);
+  transition: background .18s ease, color .18s ease;
 }
 
 .user-item a:hover,
 .user-item a:active {
-  background: #ffd900;
+  background: #111319;
 }
 
 .user-item__content {
   padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  background: linear-gradient(145deg,#111319,var(--card-background) 78%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
 }
+.user-item:hover .user-item__content { border-color: rgba(192,132,252,.38); transform: translateY(-2px); box-shadow: var(--shadow-soft); }
 
 .user-item__image {
   width: 4rem;
   height: 4rem;
   margin-right: 1rem;
-  
 }
 
 .user-item__info h2 {
   font-size: 1.5rem;
   margin: 0 0 0.5rem 0;
   font-weight: normal;
-  color: #ffd900;
+  color: var(--accent-hover);
 }
 
 .user-item:hover h2,
 .user-item:active h2,
 .user-item:hover h3,
 .user-item:active h3 {
-  color: #292929;
+  color: var(--text-primary);
 }
 
 .user-item__info h3 {

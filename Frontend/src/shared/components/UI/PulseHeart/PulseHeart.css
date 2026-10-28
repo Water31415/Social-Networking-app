@@ -1,0 +1,41 @@
+.pulse-heart {
+  --ph-size: 24px;
+  --ph-pill: transparent;
+  --ph-idle: #aab4c0;
+  --ph-liked: #ff4d6d;
+  --ph-text: #e6edf3;
+  --ph-roll: 350ms;
+  --ph-ease-out: cubic-bezier(.23, 1, .32, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ph-text);
+  font: inherit;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 160ms var(--ph-ease-out);
+}
+.pulse-heart[data-pressed] { transform: scale(.97); }
+.pulse-heart:focus-visible { outline: 2px solid color-mix(in srgb, var(--ph-liked) 60%, transparent); outline-offset: 4px; }
+.pulse-heart:disabled { opacity: .55; cursor: not-allowed; }
+.pulse-heart__pill { display: inline-flex; align-items: center; gap: 8px; padding: 0; border-radius: 8px; background: var(--ph-pill); transform-origin: center; }
+.pulse-heart__heart { display: block; width: var(--ph-size); height: var(--ph-size); color: var(--ph-idle); transform-origin: center; transition: color 160ms ease; }
+.pulse-heart__heart svg { display: block; width: 100%; height: 100%; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pulse-heart[data-liked='true'] .pulse-heart__heart svg { fill: currentColor; }
+.pulse-heart[data-liked='true'] .pulse-heart__heart { color: var(--ph-liked); }
+.pulse-heart[data-running] .pulse-heart__heart { transition: none; }
+@media (hover: hover) and (pointer: fine) { .pulse-heart:not([aria-pressed='true']):not(:disabled):hover .pulse-heart__heart { color: color-mix(in srgb, var(--ph-idle) 45%, var(--ph-liked)); } }
+.pulse-heart__count { display: inline-flex; color: var(--ph-text); font-size: .98rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.pulse-heart__count > span { display: block; height: 1em; }
+.pulse-heart__slot { position: relative; overflow: hidden; }
+.pulse-heart__roll { display: flex; flex-direction: column; transition: transform var(--ph-roll) var(--ph-ease-out); }
+.pulse-heart__roll > span { display: block; height: 1em; line-height: 1; }
+@media (prefers-reduced-motion: reduce) { .pulse-heart,.pulse-heart__heart,.pulse-heart__roll { transition: none; } }

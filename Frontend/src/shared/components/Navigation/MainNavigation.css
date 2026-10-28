@@ -1,45 +1,140 @@
 .main-navigation__menu-btn {
-  width: 3rem;
-  height: 3rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 11px;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  margin-right: 2rem;
+  justify-content: center;
+  gap: 5px;
+  margin-right: 1rem;
+  padding: .65rem;
   cursor: pointer;
+  transition: background 150ms ease,border-color 150ms ease;
 }
 
 .main-navigation__menu-btn span {
   display: block;
-  width: 3rem;
-  height: 2.5px;
-  background: white;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: #e8e2ef;
 }
 
-.main-navigation__title {
-  color: white;
-}
+.main-navigation__menu-btn:hover { border-color: var(--border); background: var(--surface-raised); }
+.main-navigation__menu-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
-.main-navigation__title a {
-  text-decoration: none;
-  color: white;
+.main-navigation__title { margin: 0; color: var(--accent-hover); font-family: var(--font-brand); font-size: 2.7rem; font-weight: 400; line-height: 1; letter-spacing: .015em; }
+.main-navigation__title a { display: inline-flex; align-items: center; color: inherit; text-decoration: none; text-shadow: 0 0 22px rgba(168, 85, 247, .2); }
+.main-navigation__brand-shine { font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: .02em; }
+.main-navigation__search {
+  position: relative;
+  display: flex;
+  flex: 0 1 34rem;
+  align-items: center;
+  gap: .7rem;
+  width: min(46vw, 34rem);
+  min-width: 10rem;
+  min-height: 2.8rem;
+  margin-left: auto;
+  padding: 0 .9rem;
+  border: 1px solid rgba(192, 132, 252, .2);
+  border-radius: 999px;
+  background: rgba(18, 19, 25, .88);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
-
-.main-navigation__header-nav {
-  display: none;
+.main-navigation__search:focus-within {
+  border-color: rgba(192, 132, 252, .72);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, .13);
 }
-
-.main-navigation__drawer-nav {
-  height: 100%;
+.main-navigation__search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
+.main-navigation__search > svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #b9a2d4;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+.main-navigation__search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary, #f4f3fa);
+  background: transparent;
+  font: inherit;
+}
+.main-navigation__search input::placeholder { color: #858b99; }
+.main-navigation__search input::-webkit-search-cancel-button { display: none; }
+.main-navigation__search > button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #ddd5e9;
+  background: rgba(255, 255, 255, .08);
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.main-navigation__search > button:focus-visible { outline: 2px solid #c084fc; outline-offset: 2px; }
+.main-navigation__drawer-nav { height: 100%; }
+.main-navigation__icon-sidebar { display: none; }
 
-@media (min-width: 768px) {
-  .main-navigation__menu-btn {
-    display: none;
+@media (min-width: 1200px) {
+  .main-navigation__menu-btn { display: none; }
+
+  .main-header { padding-left: 1.25rem; }
+
+  .main-navigation__search { width: min(48vw, 34rem); }
+
+  .main-navigation__icon-sidebar {
+    position: fixed;
+    z-index: 6;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    width: 4.375rem;
+    justify-content: center;
+    overflow: visible;
+    border-right: 1px solid var(--card-divider);
+    background: var(--app-background);
   }
 
-  .main-navigation__header-nav {
-    display: block;
+  .app-content > main { margin-left: 4.375rem; }
+}
+
+@media (max-width: 480px) {
+  .main-navigation__search {
+    flex-basis: 9rem;
+    width: 42vw;
+    min-width: 8.75rem;
+    min-height: 2.55rem;
+    gap: .45rem;
+    padding: 0 .65rem;
   }
+  .main-navigation__title { font-size: 2.2rem; }
+}
+
+@media (max-width: 360px) {
+  .main-header { padding-right: .55rem; padding-left: .55rem; }
+  .main-navigation__menu-btn { width: 2.4rem; height: 2.4rem; margin-right: .5rem; }
+  .main-navigation__title { font-size: 1.8rem; }
+  .main-navigation__search { flex-basis: 7.5rem; width: 7.5rem; min-width: 7.5rem; gap: .35rem; padding: 0 .5rem; }
 }

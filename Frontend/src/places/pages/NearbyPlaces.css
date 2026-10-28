@@ -1,0 +1,4 @@
+.nearby-page { max-width: 64rem; margin: 2rem auto; padding: 0 1rem; }
+.nearby-page__intro { padding: 1.5rem; text-align: left; border-radius: 14px; background: var(--card-background); border-color: var(--card-border); }
+.nearby-page__intro h1 { margin-top: 0; }
+.nearby-page__message { margin: 1rem auto; padding: 1rem; text-align: left; border-radius: 14px; background: var(--card-background); border-color: var(--card-border); }

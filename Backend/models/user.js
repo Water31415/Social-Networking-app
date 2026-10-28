@@ -17,6 +17,12 @@ const userSchema = new Schema({
         ref : 'Place',
         required : true,
     }],
+    trips: {
+        type: [{ type: mongoose.Types.ObjectId, ref: 'Trip' }],
+        default: []
+    },
+    followers: { type: [{ type: mongoose.Types.ObjectId, ref: 'User' }], default: [] },
+    following: { type: [{ type: mongoose.Types.ObjectId, ref: 'User' }], default: [] },
     password :{
         type : String,
         required : true,

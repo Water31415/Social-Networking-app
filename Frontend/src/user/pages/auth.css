@@ -5,11 +5,23 @@
 
 .authentication {
   width: 90%;
-  max-width: 25rem;
-  margin: 7rem auto;
+  max-width: 27rem;
+  margin: clamp(2rem, 8vh, 5rem) auto;
+  padding: clamp(1.35rem, 4vw, 2rem);
   text-align: center;
+  border-color: rgba(192,132,252,.2);
+  background: radial-gradient(ellipse at 50% 0%,rgba(168,85,247,.1),transparent 50%),var(--card-background);
+}
+
+.authentication > h2 {
+  margin: .25rem 0 1.4rem;
+  font-size: clamp(1.45rem, 4vw, 1.8rem);
+  letter-spacing: -.04em;
 }
 
 .authentication form {
   margin-bottom: 1rem;
 }
+
+.authentication form > .button { width: 100%; margin-top: .3rem; }
+.authentication > .button { min-width: 7rem; }

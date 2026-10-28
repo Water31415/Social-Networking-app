@@ -3,7 +3,9 @@ import PlaceList from "../components/PlaceList";
 import { useParams } from "react-router-dom";
 import { useHttpClient } from "../../shared/hooks/http-hook";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
-import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import { LoadingText } from '../../shared/components/UI';
+import { backendUrl } from "../../shared/Utils/backend-url";
+import './places.css';
 
 const UserPlaces =  props=>{
   const[loadedPlaces,setLoadedPlaces]=useState()
@@ -14,11 +16,14 @@ const UserPlaces =  props=>{
   const fetchUser = async () => {
     try {
       const responseData = await sendRequest(
-        `${process.env.REACT_APP_BACKEND_URL}api/places/user/${userId}`
+        backendUrl(`api/places/user/${userId}`)
       );
 
 
-    setLoadedPlaces(responseData.place);
+    const places=(responseData.place || []).map(place=>({...place,id:(place.id || place._id).toString()}))
+    setLoadedPlaces(places)
+    const placeAnchor=window.location.hash.slice(1)
+    if(placeAnchor) setTimeout(()=>document.getElementById(placeAnchor)?.scrollIntoView({behavior:'smooth'}),0)
     } catch (error) {
       console.log(error);
     }
@@ -28,16 +33,15 @@ const UserPlaces =  props=>{
 }, [sendRequest, userId]);
 
   const placeDeleteHandler= (deletedPlaceId)=>{
-    setLoadedPlaces(prevPlaces=>prevPlaces.filter(place=>place.id!==deletedPlaceId))
+    const deletedId=deletedPlaceId.toString()
+    setLoadedPlaces(prevPlaces=>prevPlaces.filter(place=>place.id!==deletedId))
   }
     
 
     return (<React.Fragment>
       <ErrorModal error={error} onClear={clearError} />
-      {isLoading && (<div className="center" >
-        <LoadingSpinner/>
-        </div>)}
-      {!isLoading && loadedPlaces && <PlaceList items={loadedPlaces} onDeletePlace={placeDeleteHandler} />}
+      <LoadingText isLoading={isLoading} text="places" />
+      {!isLoading && loadedPlaces && <PlaceList items={loadedPlaces} onDeletePlace={placeDeleteHandler} tripFeedUserId={userId} />}
           
           
           

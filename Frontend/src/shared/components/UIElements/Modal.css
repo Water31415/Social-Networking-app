@@ -1,18 +1,27 @@
 .modal {
   z-index: 100;
   position: fixed;
-  top: 22vh;
+  top: 9vh;
   left: 10%;
   width: 80%;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
-  border-radius: 8px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
+
+.modal > form { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
 
 .modal__header {
   width: 100%;
-  padding: 1rem 0.5rem;
-  background: #2a006e;
+  flex: 0 0 auto;
+  padding: .9rem 1rem;
+  background: linear-gradient(120deg, #1b1524, #111319);
   color: white;
 }
 
@@ -21,8 +30,13 @@
 }
 
 .modal__content {
-  padding: 1rem 0.5rem;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+  overscroll-behavior: contain;
 }
+
+.modal__header { border-bottom: 1px solid var(--border); }
 
 .modal__footer {
   padding: 1rem 0.5rem;

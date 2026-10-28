@@ -1,8 +1,9 @@
 import React,{useEffect,useState} from 'react'
 import UserList from '../components/userList.js'
 import ErrorModal from "../../shared/components/UIElements/ErrorModal"
-import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner"
+import { LoadingText } from '../../shared/components/UI'
 import { useHttpClient } from '../../shared/hooks/http-hook.js'
+import { backendUrl } from '../../shared/Utils/backend-url.js'
 
 const User = () =>{
     const {isLoading,sendRequest,clearError,error}= useHttpClient()
@@ -11,7 +12,7 @@ const User = () =>{
         const fetchUsers= async () => {
             try {
                 
-                const responseData= await sendRequest(`${process.env.REACT_APP_BACKEND_URL}api/users`)
+                const responseData= await sendRequest(backendUrl('api/users'))
 
             
                 setLoadedUsers(responseData.users)
@@ -26,9 +27,7 @@ const User = () =>{
     
     return <React.Fragment>
         <ErrorModal error={error} onClear={clearError} />
-        {isLoading && <div className='center'>
-            <LoadingSpinner/>
-            </div>}
+        <LoadingText isLoading={isLoading} text="users" />
         {!isLoading && loadedUser&& <UserList items ={loadedUser}/>}
         </React.Fragment>
 } 

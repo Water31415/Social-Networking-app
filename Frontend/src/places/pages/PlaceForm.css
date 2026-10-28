@@ -4,7 +4,17 @@
   padding: 1rem;
   width: 90%;
   max-width: 40rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
-  border-radius: 6px;
-  background: white;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-card);
+  background: var(--card-background);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.place-location-error {
+  display: block;
+  margin: -.4rem 0 .6rem;
+  color: #fda4af;
+  line-height: 1.45;
 }

@@ -1,0 +1,123 @@
+.add-place-options {
+  display: flex;
+  min-height: calc(100vh - 6rem);
+  flex-direction: column;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  background: linear-gradient(160deg, #101116, #09090b 72%);
+  box-shadow: var(--shadow-soft);
+  color: var(--text-primary);
+}
+
+.add-place-options__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--card-divider);
+}
+
+.add-place-options__header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.add-place-options__header button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add-place-options__header button:hover,
+.add-place-options__header button:focus-visible {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.add-place-options__list {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  padding-top: 1rem;
+}
+
+.add-place-option {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 5.7rem;
+  padding: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.add-place-option:hover,
+.add-place-option:focus-visible {
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.07);
+  transform: translateX(2px);
+  outline: none;
+}
+
+.add-place-option__icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: 13px;
+  background: #1b1b22;
+  border: 1px solid rgba(255, 255, 255, .06);
+  color: var(--text-primary);
+}
+
+.add-place-option__icon svg {
+  width: 1.55rem;
+  height: 1.55rem;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.add-place-option--trip .add-place-option__icon {
+  color: var(--accent-hover);
+  background: rgba(168, 85, 247, .12);
+  border-color: rgba(168, 85, 247, .22);
+}
+
+.add-place-option__copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.add-place-option__copy strong {
+  font-size: 1rem;
+}
+
+.add-place-option__description {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add-place-option {
+    transition: none;
+  }
+}

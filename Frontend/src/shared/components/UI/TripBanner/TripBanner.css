@@ -1,0 +1,12 @@
+.trip-banner { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .7rem auto; padding: .7rem 1rem; max-width: 76rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text-primary); }
+.trip-banner > div:first-child { display: grid; gap: .2rem; }
+.trip-banner__live { color: #86efac; font-size: .66rem; font-weight: 700; letter-spacing: .1em; }
+.trip-banner__live i { display: inline-block; width: .45rem; height: .45rem; margin-right: .25rem; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.trip-banner__actions { display: flex; align-items: center; gap: .6rem; }
+.trip-banner__actions > a,.trip-banner__actions > button { border: 0; border-radius: 8px; padding: .55rem .8rem; color: white; background: #7c3aed; text-decoration: none; cursor: pointer; font: inherit; font-size: .85rem; }
+.trip-banner__actions > button { background: #9f1239; }
+.trip-banner button:disabled { opacity: .6; cursor: wait; }
+.trip-banner__start { display: flex; justify-content: flex-end; width: 100%; }
+.trip-banner small { position: absolute; right: 1rem; top: calc(100% + .25rem); color: #fda4af; }
+@media(max-width:500px) { .trip-banner { flex-wrap: wrap; } .trip-banner__actions { width: 100%; } }
+
