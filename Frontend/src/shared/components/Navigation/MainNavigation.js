@@ -84,6 +84,12 @@ const MainNavigation = props =>{
          const closeDrawerHandler = ()=>{
             setDrawerIsOpen(false)
         }
+        useEffect(() => {
+            if (!drawerIsOpen) return undefined
+            const closeOnEscape = event => { if (event.key === 'Escape') setDrawerIsOpen(false) }
+            window.addEventListener('keydown', closeOnEscape)
+            return () => window.removeEventListener('keydown', closeOnEscape)
+        }, [drawerIsOpen])
         const submitSearch = event => {
             event.preventDefault()
             const isPlacesRoute = location.pathname === '/'
@@ -100,17 +106,18 @@ const MainNavigation = props =>{
 
         </nav>
     </SlideDrawer> 
-    <MainHeader>
-        <button className="main-navigation__menu-btn" onClick={openDrawerHandler}>
+    <MainHeader className={auth.isLoggedIn ? 'main-header--signed-in' : ''}>
+        <button type="button" className="main-navigation__menu-btn" onClick={openDrawerHandler} aria-label="Open navigation" aria-expanded={drawerIsOpen}>
             <span/>
             <span/>
             <span/>
         </button>
-        <h1 className="main-navigation__title">
+        <div className="main-navigation__title">
             <Link to="/" aria-label="SnapIt — view all places" title="View all places">
-                <ShinyText text="SnapIt!" className="main-navigation__brand-shine" color="#c084fc" shineColor="#ffffff" speed={2.4} shineWidth={32} softness={0.45} glow={0.3} trigger="loop" yoyo />
+                <ShinyText text="SnapIt!" className="main-navigation__brand-shine" color="#c5a2fa" shineColor="#f0ece2" speed={3.8} shineWidth={24} softness={0.45} glow={0.08} trigger="hover" />
             </Link>
-        </h1>
+            <span className="main-navigation__edition">A journal of places</span>
+        </div>
         {location.pathname !== '/auth' && <form className="main-navigation__search" role="search" onSubmit={submitSearch}>
             <label className="main-navigation__search-label" htmlFor="main-place-search">Search places</label>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></svg>
@@ -124,6 +131,10 @@ const MainNavigation = props =>{
             />
             {searchTerm && <button type="button" onClick={() => setSearchTerm('')} aria-label="Clear place search">×</button>}
         </form>}
+        {!auth.isLoggedIn && location.pathname !== '/auth' && <Link className="main-navigation__join" to="/auth" aria-label="Join the journal">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+            <span>Join the journal</span>
+        </Link>}
     </MainHeader>
     <aside className="main-navigation__icon-sidebar"><NavLinks variant="sidebar" hasNewMilestone={hasNewMilestone} onDashboardOpen={acknowledgeMilestones}/></aside>
     </React.Fragment> )

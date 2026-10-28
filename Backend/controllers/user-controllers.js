@@ -3,6 +3,7 @@ const User = require("../models/user")
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { getJwtSecret } = require('../config/environment')
 
 
 
@@ -52,6 +53,9 @@ const signUp = async(req,res,next)=>{
   if(!(name && email && password && req.file)){
     return next(new HttpError("Enter all fields and select a profile image",422))
   }
+  let jwtSecret
+  try { jwtSecret = getJwtSecret() }
+  catch (error) { return next(new HttpError('Authentication is not configured',503)) }
   let existingUser
   try { existingUser = await User.findOne({email :email}) }
   catch (error) { return next(new HttpError("Could not verify the account",500)) }
@@ -85,7 +89,7 @@ const signUp = async(req,res,next)=>{
   let token
   try {
     token = jwt.sign(
-      {userId : createdUser.id , email : createdUser.email},`${process.env.JWT_API_KEY}`,{expiresIn :'1h'})
+      {userId : createdUser.id , email : createdUser.email},jwtSecret,{expiresIn :'1h',algorithm:'HS256'})
   } catch (error) {
     return next(new HttpError("creating user failed , try again",500))
   }
@@ -107,6 +111,9 @@ const login =async(req,res,next)=>{
   if(!(email && password)){
     return next(new HttpError("Enter all the fields",422))
   }
+  let jwtSecret
+  try { jwtSecret = getJwtSecret() }
+  catch (error) { return next(new HttpError('Authentication is not configured',503)) }
   let identifiedUser
   try { identifiedUser = await User.findOne({email:email}) }
   catch (error) { return next(new HttpError("Could not find account",500)) }
@@ -128,7 +135,7 @@ const login =async(req,res,next)=>{
   try {
     token = jwt.sign({
       userId:identifiedUser.id, email :identifiedUser.email
-    },`${process.env.JWT_API_KEY}`,{expiresIn:'1h'})
+    },jwtSecret,{expiresIn:'1h',algorithm:'HS256'})
   } catch (error) {
      return next(new HttpError("creating user failed , try again",500))
   }

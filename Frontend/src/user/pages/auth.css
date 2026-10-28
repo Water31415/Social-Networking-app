@@ -1,27 +1,68 @@
-.authentication__header {
-  color: white;
-  text-align: center;
+.authentication-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem);
+  align-items: start;
+  gap: clamp(2.5rem, 7vw, 7rem);
+  width: min(100%, 68rem);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vh, 2.75rem) clamp(.25rem, 2vw, 1rem) 4rem;
 }
-
-.authentication {
-  width: 90%;
-  max-width: 27rem;
-  margin: clamp(2rem, 8vh, 5rem) auto;
-  padding: clamp(1.35rem, 4vw, 2rem);
-  text-align: center;
-  border-color: rgba(192,132,252,.2);
-  background: radial-gradient(ellipse at 50% 0%,rgba(168,85,247,.1),transparent 50%),var(--card-background);
+.authentication-story { padding-top: .75rem; }
+.authentication-story__eyebrow,
+.authentication__header > span,
+.authentication-story__footer {
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  line-height: 1.6;
 }
-
-.authentication > h2 {
-  margin: .25rem 0 1.4rem;
-  font-size: clamp(1.45rem, 4vw, 1.8rem);
-  letter-spacing: -.04em;
+.authentication-story__eyebrow { color: var(--accent); }
+.authentication-story h1 {
+  margin: 1rem 0 .85rem;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(2.3rem, 3.8vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -.055em;
 }
-
-.authentication form {
-  margin-bottom: 1rem;
+.authentication-story h1 em { color: var(--accent); font-weight: 400; }
+.authentication-story > p { max-width: 24rem; margin: 0; color: var(--text-secondary); font-size: .96rem; line-height: 1.8; }
+.authentication-story__notes { display: grid; gap: 1.4rem; margin: 1.75rem 0 1.5rem; padding: 0; list-style: none; }
+.authentication-story__notes li { display: flex; gap: 1rem; }
+.authentication-story__notes li > span { flex: 0 0 1.8rem; padding-top: .2rem; color: var(--signal); font-family: var(--font-mono); font-size: .65rem; }
+.authentication-story__notes strong { color: var(--text-primary); font-size: .88rem; font-weight: 550; }
+.authentication-story__notes p { margin: .25rem 0 0; color: var(--text-secondary); font-size: .8rem; line-height: 1.65; }
+.authentication-story__footer { display: block; padding-top: 1.2rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: .57rem; }
+.authentication.card {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(1.4rem, 3vw, 2rem);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text-primary);
+  text-align: left;
+  box-shadow: none;
 }
-
-.authentication form > .button { width: 100%; margin-top: .3rem; }
-.authentication > .button { min-width: 7rem; }
+.authentication__header { padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.authentication__header > span { color: var(--text-secondary); font-size: .58rem; letter-spacing: .12em; }
+.authentication__header h2 { margin: .75rem 0 .6rem; font-family: var(--font-display); font-size: 1.85rem; font-weight: 400; letter-spacing: -.035em; }
+.authentication__header p { margin: 0; color: var(--text-secondary); font-size: .83rem; }
+.authentication form { margin: 1.65rem 0 0; }
+.authentication form > .button { width: 100%; margin: .5rem 0 0; }
+.authentication__switch { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.7rem; padding-top: 1.3rem; border-top: 1px solid var(--border); }
+.authentication__switch > span { color: var(--text-secondary); font-size: .8rem; }
+.authentication__switch > .button { min-height: 2.35rem; margin: 0; padding: .45rem .85rem; font-size: .78rem; }
+.authentication .image-upload { align-items: flex-start; }
+.authentication .image-upload__preview { width: 7rem; height: 7rem; }
+@media (max-width: 850px) {
+  .authentication-page { grid-template-columns: minmax(0, 1fr); max-width: 30rem; gap: 1.25rem; padding-top: .5rem; padding-inline: max(1rem, var(--content-gutter)); }
+  .authentication-story { padding-top: 0; }
+  .authentication-story h1 { margin-top: .65rem; font-size: clamp(2.05rem, 6vw, 2.7rem); }
+  .authentication-story__notes { display: none; }
+  .authentication-story__footer { margin-top: 1.4rem; }
+}

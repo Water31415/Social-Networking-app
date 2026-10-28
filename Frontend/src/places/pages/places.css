@@ -1,53 +1,24 @@
-.places-page {
-  width: 100%;
-  min-width: 0;
-  min-height: calc(100vh - 4rem);
-}
-
-.places-page--with-create {
-  display: grid;
-  grid-template-columns: minmax(17rem, 23rem) minmax(0, 1fr);
-  align-items: start;
-  gap: clamp(1.25rem, 2.2vw, 2rem);
-  width: min(100%, 1500px);
-  margin: 0 auto;
-  padding: clamp(1rem, 2vw, 1.75rem) clamp(0.75rem, 2vw, 1.5rem);
-}
-
-.places-page__create {
-  position: sticky;
-  top: 1.25rem;
-  min-width: 0;
-  align-self: start;
-}
-
-.places-page__feed {
-  min-width: 0;
-}
-
-.places-page--with-create .place-list {
-  width: 100%;
-  max-width: 1180px;
-}
-
-.places-location-error {
-  width: min(90%, 72rem);
-  margin: -0.5rem auto 1rem;
-  color: #ff9aa8;
-  text-align: right;
-}
-
-@media (max-width: 900px) {
-  .places-page--with-create {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .places-page__create {
-    position: static;
-  }
-
-  .add-place-options {
-    min-height: 0;
-  }
-}
-
+.places-page { width: min(100%, 1480px); min-width: 0; min-height: calc(100vh - 5.5rem); margin: 0 auto; padding: 0 var(--content-gutter) 3rem; }
+.places-page__feed { min-width: 0; }
+.places-page__intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; padding: clamp(1.5rem, 3vw, 2.5rem) 0 1.25rem; }
+.places-page__eyebrow { display: flex; align-items: center; gap: .65rem; margin: 0 0 .8rem; color: var(--text-secondary); font-family: var(--font-mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; }
+.places-page__eyebrow > span { width: .4rem; height: .4rem; border-radius: 50%; background: var(--signal); }
+.places-page__intro h1 { max-width: 18ch; margin: 0; font-family: var(--font-display); font-size: clamp(2.2rem, 4vw, 3.6rem); font-weight: 400; line-height: 1.01; letter-spacing: -.055em; }
+.places-page__intro h1 em { color: var(--accent); font-weight: 400; }
+.places-page__intro-note { max-width: 28ch; margin: 0 0 .2rem; padding-left: 1.25rem; border-left: 1px solid var(--border); color: var(--text-secondary); font-size: .85rem; line-height: 1.8; }
+.places-page__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; padding: .85rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--card-divider); }
+.places-page__filters { display: flex; gap: .45rem; }
+.places-page__filters button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.55rem; padding: .5rem .85rem; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: .78rem; font-weight: 550; }
+.places-page__filters button.is-active { border-color: var(--border); color: var(--text-primary); background: var(--surface-raised); }
+.places-page__filters button:hover:not(:disabled) { color: var(--accent); }
+.places-page__filters svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.places-page__collection-note { color: var(--text-secondary); font-family: var(--font-mono); font-size: .6rem; letter-spacing: .025em; text-transform: uppercase; }
+.places-page__collection-note span { margin-left: .75rem; color: var(--signal); }
+.places-page--with-create { display: grid; grid-template-columns: minmax(16rem, 21rem) minmax(0, 1fr); align-items: start; gap: 2rem; padding-top: 2rem; }
+.places-page__create { position: sticky; top: 7rem; min-width: 0; align-self: start; }
+.places-page--with-create .places-page__intro { padding-top: .5rem; }
+.places-page--with-create .places-page__intro h1 { font-size: clamp(2rem, 3vw, 2.8rem); }
+.places-page--with-create .places-page__intro-note { display: none; }
+.places-location-error { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 2px solid #ed9b9d; color: #edb2b0; background: rgba(237,155,157,.06); font-size: .85rem; }
+@media (max-width: 900px) { .places-page--with-create { grid-template-columns: minmax(0, 1fr); } .places-page__create { position: static; } .add-place-options { min-height: 0; } }
+@media (max-width: 640px) { .places-page__intro { display: block; padding-top: 1.25rem; padding-bottom: 1rem; } .places-page__eyebrow { margin-bottom: .65rem; font-size: .58rem; } .places-page__intro h1 { max-width: 18ch; font-size: clamp(2rem, 8vw, 2.7rem); } .places-page__intro-note { max-width: none; margin-top: .8rem; padding-left: 0; border: 0; font-size: .78rem; } .places-page__intro-note br { display: none; } .places-page__collection-note { display: none; } .places-page__toolbar { margin-bottom: 1rem; padding: .6rem 0; } }

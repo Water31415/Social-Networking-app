@@ -1,4 +1,5 @@
 import React,{useContext,useEffect,useMemo,useState} from 'react'
+import { Link } from 'react-router-dom'
 import { AuthContext } from '../../shared/components/context/auth-context'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import { backendUrl } from '../../shared/Utils/backend-url'
@@ -35,11 +36,11 @@ const METRICS=[
 ]
 
 const BADGE_META={
-    'first-place':{tone:'violet'},
-    explorer:{tone:'blue'},
-    popular:{tone:'pink'},
-    conversation:{tone:'cyan'},
-    connector:{tone:'amber'}
+    'first-place':{tone:'violet',mark:'M32 55S49 38 49 24a17 17 0 0 0-34 0c0 14 17 31 17 31Z M39 24a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'},
+    explorer:{tone:'blue',mark:'M32 7a25 25 0 1 0 0 50 25 25 0 0 0 0-50Z M42 22l-6 14-14 6 6-14 14-6Z M32 2v9 M32 53v9 M2 32h9 M53 32h9'},
+    popular:{tone:'pink',mark:'m32 7 7.5 15.2L56 24.6 44 36.3l2.8 16.5L32 45l-14.8 7.8L20 36.3 8 24.6l16.5-2.4L32 7Z'},
+    conversation:{tone:'cyan',mark:'M9 11h39v29H26L13 51V40H9V11Z M48 24h8v27h-7l-9 8V48H27v-8 M18 21h21 M18 29h15'},
+    connector:{tone:'amber',mark:'M23 31 42 18 M23 36l19 12 M55 14a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z M25 33a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z M55 51a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z'}
 }
 
 const Dashboard=()=>{
@@ -89,35 +90,40 @@ const Dashboard=()=>{
     }
     const chartMax = Math.max(4, ...monthlyPlaces.map(item => item.value))
 
-    const badges=(analytics?.badges || []).map(badge=>{
+    const earnedBadgeCount = (analytics?.badges || []).filter(badge => badge.earned).length
+    const badges=(analytics?.badges || []).map((badge,index)=>{
         const meta=BADGE_META[badge.id] || {tone:'violet'}
 
         return <FlipCard
             key={badge.id}
             className={`achievement-flip-card achievement-flip-card--${meta.tone} ${badge.earned ? 'is-earned' : 'is-locked'}`}
             front={<div className="achievement-face achievement-face--front">
-                <img className="achievement-face__image" src="/images/landscape.png" alt="" />
+                <div className="achievement-face__topline"><span>NO. {String(index + 1).padStart(2,'0')}</span><span className="achievement-face__status">{badge.earned ? 'COLLECTED' : 'TO DISCOVER'}</span></div>
+                <div className="achievement-face__mark"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d={meta.mark || BADGE_META['first-place'].mark} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                <h3>{badge.label}</h3>
+                <p>{badge.earned ? 'A little proof of your journey.' : 'Your next chapter is waiting.'}</p>
+                <span className="achievement-face__flip-hint">View milestone <span aria-hidden="true">↗</span></span>
             </div>}
             back={<div className="achievement-face achievement-face--back">
                 <span className="achievement-face__eyebrow">MILESTONE DETAILS</span>
                 <h3>{badge.label}</h3>
                 <p>{badge.description}</p>
                 <div className={`achievement-face__result ${badge.earned ? 'is-earned' : ''}`}>
-                    {badge.earned ? 'Badge earned — keep exploring!' : `Keep going to unlock this badge.`}
+                    {badge.earned ? 'In your collection. Keep exploring.' : 'Keep exploring to collect this milestone.'}
                 </div>
                 <span className="achievement-face__flip-hint">Tap to flip back</span>
             </div>}
             axis="y"
             flipOnClick
-            glareOpacity={0.18}
-            hoverScale={1.025}
-            width={190}
+            glareOpacity={0}
+            hoverScale={1.015}
+            width={220}
             height={270}
-            radius={18}
-            background="#111014"
-            color="#f5f5f5"
+            radius={4}
+            background="#131714"
+            color="#f0ece2"
             shadowColor="#000000"
-            shadowOpacity={badge.earned ? 0.32 : 0.18}
+            shadowOpacity={0}
             ariaLabel={`${badge.label} achievement, ${badge.earned ? 'earned' : 'not yet earned'}. Flip for details.`}
         />
     })
@@ -126,18 +132,21 @@ const Dashboard=()=>{
         <ErrorModal error={error} onClear={clearError}/>
         <header className="analytics-header">
             <div className="analytics-header__intro">
-                <span className="analytics-header__eyebrow">TRAVEL LOG / SNAPIT</span>
-                <h1>Your activity</h1>
-                <p>Places shared, reactions received, and conversations started.</p>
+                <span className="analytics-header__eyebrow">SNAPIT / YOUR FIELD NOTES</span>
+                <h1>Every place leaves a trace.</h1>
+                <p>A record of the places you kept, the stories you shared, and the people you reached.</p>
             </div>
+            <div className="analytics-header__tools">
+            <Link className="analytics-header__journal-link" to={`/${auth.userId}/places`}>Open my journal <span aria-hidden="true">↗</span></Link>
             <label className="analytics-range">
-                <span className="analytics-range__label">Chart range</span>
+                <span className="analytics-range__label">Looking back</span>
                 <select value={monthRange} onChange={event=>setMonthRange(Number(event.target.value))} aria-label="Chart time range">
                     <option value={3}>Last 3 months</option>
                     <option value={6}>Last 6 months</option>
                     <option value={12}>Last 12 months</option>
                 </select>
             </label>
+            </div>
         </header>
         <LoadingText isLoading={isLoading} text="your dashboard" className="loading-text--dashboard" />
         {analytics && <>
@@ -156,8 +165,8 @@ const Dashboard=()=>{
                 <div className="analytics-dashboard__content">
                     <section className="analytics-chart" aria-label="Places shared by month">
                         <div className="analytics-chart__header">
-                            <h2>Places shared by month</h2>
-                            <span>New places</span>
+                            <div><p className="analytics-chart__eyebrow">01 / THE LONG VIEW</p><h2>Your rhythm, by month.</h2></div>
+                            <span>New entries</span>
                         </div>
                         <div className="analytics-chart__plot">
                             <div className="analytics-chart__axis" aria-hidden="true">
@@ -177,11 +186,12 @@ const Dashboard=()=>{
             <section className="achievement-section" aria-labelledby="achievements-heading">
                 <header className="achievement-section__header">
                     <div>
-                        <p className="achievement-section__eyebrow">YOUR MILESTONES</p>
-                        <h2 id="achievements-heading">Achievements</h2>
+                        <p className="achievement-section__eyebrow">02 / SMALL THINGS, WELL EARNED</p>
+                        <h2 id="achievements-heading">The collection.</h2>
                     </div>
+                    <span className="achievement-section__count">{earnedBadgeCount} / {(analytics.badges || []).length} collected</span>
                 </header>
-                <p className="achievement-section__hint">Keep sharing places and connecting with travelers to unlock more badges. Tap any badge to flip it.</p>
+                <p className="achievement-section__hint">Places become memories. Moments become milestones. Turn a card to see its story.</p>
                 <div className="badge-grid">{badges}</div>
             </section>
         </>}

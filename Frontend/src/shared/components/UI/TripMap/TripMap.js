@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
-import * as L from '../../UIElements/leaflet-src.esm'
-import '../../UIElements/leaflet.css'
+import * as L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import './TripMap.css'
 
 const TripMap = ({ stops = [] }) => {

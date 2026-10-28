@@ -4,6 +4,7 @@ import { AuthContext } from '../../shared/components/context/auth-context'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import { backendUrl, backendImageUrl } from '../../shared/Utils/backend-url'
 import { PulseHeart } from '../../shared/components/UI'
+import GoogleSearchButton from '../../shared/components/UIElements/GoogleSearchButton'
 import './TripFeed.css'
 
 const LANGUAGES = [['es','Spanish'],['fr','French'],['de','German'],['hi','Hindi'],['ja','Japanese'],['pt','Portuguese']]
@@ -37,6 +38,8 @@ export const TripFeedCard = ({ trip }) => {
   const stopCount = trip.summary?.stopCount ?? trip.stops?.length ?? 0
   const days = trip.summary?.days || 1
   const distance = trip.summary?.distanceTravelled || 0
+  const searchStop = trip.stops?.find(stop => stop.title || stop.address)
+  const searchQuery = [trip.title, searchStop?.title, searchStop?.address || trip.startAddress].filter(Boolean).join(' ')
   const liked = likes.some(like => String(like?._id || like) === String(auth.userId))
 
   const toggleLike = async () => {
@@ -97,13 +100,14 @@ export const TripFeedCard = ({ trip }) => {
       <div className="trip-feed__inline-content">
         <span className="trip-feed__eyebrow">TRIP JOURNAL</span>
         <h2>{translatedTitle || trip.title}</h2>
-        <p>{trip.creator?.name || 'SnapIt! traveler'}</p>
-        <small>{days} days · {stopCount} stops · {distance} km</small>
+        <p className="trip-feed__byline">{trip.creator?.name || 'SnapIt! traveler'}</p>
+        <small className="trip-feed__route-stats"><span><strong>{days}</strong> days</span><span><strong>{stopCount}</strong> stops</span><span><strong>{distance}</strong> km</span></small>
         <span className="trip-feed__open">View trip journal <span aria-hidden="true">↗</span></span>
       </div>
     </Link>
 
     <div className="trip-feed__actions" aria-label="Trip engagement">
+      <GoogleSearchButton query={searchQuery} />
       <PulseHeart className="trip-feed__action trip-feed__like" liked={liked} count={likes.length} onChange={toggleLike} disabled={!auth.isLoggedIn} size={22} label={liked ? 'Unlike trip' : 'Like trip'} title={`${likes.length} likes`} />
       {auth.isLoggedIn && <button className="trip-feed__action" type="button" onClick={() => { setShowComments(value => !value); setTimeout(() => commentInputRef.current?.focus(), 0) }} aria-expanded={showComments} aria-label="Show trip comments" title={`${comments.length} comments`}>
         <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M24.5 13.2a10.6 10.6 0 0 1-11 10.2 11.7 11.7 0 0 1-5.1-1.2L3 24l1.8-4.5a9.8 9.8 0 0 1-2.3-6.3A10.6 10.6 0 0 1 13.5 3a10.6 10.6 0 0 1 11 10.2Z" /></svg>

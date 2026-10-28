@@ -8,10 +8,21 @@ const User = require('../models/user')
 const getCoordsForAddress = require('../utils/location')
 const getAddressForCoords = getCoordsForAddress.getAddressForCoords
 
-const uploadPath = value => path.resolve(__dirname, '..', String(value || '').replace(/^[/\\]+/, ''))
-const removeImages = paths => (paths || []).filter(Boolean).forEach(image => fs.unlink(uploadPath(image), err => {
-  if (err && err.code !== 'ENOENT') console.error('Unable to remove trip image:', err)
-}))
+const uploadDirectory = path.resolve(__dirname, '..', 'uploads', 'images')
+const uploadPath = value => {
+  if (typeof value !== 'string') return null
+  const match = /^\/?uploads\/images\/([^/\\]+)$/.exec(value)
+  if (!match || match[1] === '.' || match[1] === '..' || /[:\0]/.test(match[1])) return null
+  const resolved = path.resolve(uploadDirectory, match[1])
+  return path.dirname(resolved) === uploadDirectory ? resolved : null
+}
+const removeImages = paths => (paths || []).forEach(image => {
+  const imagePath = uploadPath(image)
+  if (!imagePath) return
+  fs.unlink(imagePath, err => {
+    if (err && err.code !== 'ENOENT') console.error('Unable to remove trip image:', err)
+  })
+})
 const ownTrip = async (tid, userId) => {
   const trip = await Trip.findById(tid)
   if (!trip) throw new HttpError('Trip not found', 404)
@@ -122,19 +133,33 @@ const updateStop = async (req, res, next) => {
     if (trip.status === 'published') return next(new HttpError('Published trips cannot be edited', 409))
     const stop = await TripStop.findOne({ _id: req.params.sid, trip: trip._id })
     if (!stop) return next(new HttpError('Stop not found', 404))
+    const old = [...stop.images]
+    let kept = old
+    if (req.body.keepImages !== undefined) {
+      try {
+        kept = typeof req.body.keepImages === 'string' ? JSON.parse(req.body.keepImages) : req.body.keepImages
+      } catch {
+        return next(new HttpError('Retained images must be a valid array of existing image paths', 422))
+      }
+      if (!Array.isArray(kept) || kept.some(image => typeof image !== 'string' || !old.includes(image) || !uploadPath(image))) {
+        return next(new HttpError('Retained images must be a valid array of existing image paths', 422))
+      }
+    }
+    const visitedAt = req.body.visitedAt !== undefined ? new Date(req.body.visitedAt) : null
+    if (visitedAt && !Number.isFinite(visitedAt.getTime())) return next(new HttpError('Visited time must be a valid date', 422))
+    const previousAddress = String(stop.address || '').trim()
+    const address = req.body.address !== undefined ? String(req.body.address || '').trim() : previousAddress
     if (req.body.title !== undefined) stop.title = String(req.body.title).trim()
     if (req.body.note !== undefined) stop.note = req.body.note
-    if (req.body.address !== undefined) stop.address = req.body.address
-    if (req.body.visitedAt !== undefined) stop.visitedAt = new Date(req.body.visitedAt)
+    if (req.body.address !== undefined) stop.address = address
+    if (visitedAt) stop.visitedAt = visitedAt
     if (req.body.expenses !== undefined) stop.expenses = typeof req.body.expenses === 'string' ? JSON.parse(req.body.expenses) : req.body.expenses
     const exif = parsePoint(req.body.exifLocation)
     const browser = parsePoint(req.body.browserLocation)
     if (validCoords(exif)) stop.location = exif
     else if (validCoords(browser)) stop.location = browser
-    else if (req.body.address) stop.location = await getCoordsForAddress(req.body.address)
-    const kept = req.body.keepImages ? JSON.parse(req.body.keepImages) : stop.images
+    else if (address && address !== previousAddress) stop.location = await getCoordsForAddress(address)
     const added = (req.files || []).map(file => `/uploads/images/${file.filename}`)
-    const old = stop.images
     stop.images = [...kept, ...added]
     await stop.save()
     removeImages(old.filter(image => !stop.images.includes(image)))

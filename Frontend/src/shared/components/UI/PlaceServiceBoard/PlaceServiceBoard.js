@@ -19,7 +19,7 @@ const PlaceServiceBoard = ({ places = [] }) => {
 
   return <section className="place-service-board" aria-label="Place activity board">
     <div className="place-service-board__header">
-      <div><p className="place-service-board__eyebrow">YOUR SERVICE BOARD</p><h2>Place activity</h2></div>
+      <div><p className="place-service-board__eyebrow">PLACES / IN DETAIL</p><h2>Place activity</h2></div>
       <span>{places.length} {places.length === 1 ? 'place' : 'places'}</span>
     </div>
     <div className="place-service-board__layout">

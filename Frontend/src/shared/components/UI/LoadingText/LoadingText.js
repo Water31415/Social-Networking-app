@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import GradientText from '../GradientText'
 import './LoadingText.css'
 
 const LOADING_QUOTES = [
@@ -21,7 +20,7 @@ const randomQuoteIndex = previousIndex => {
   return nextIndex === previousIndex ? (nextIndex + 1) % LOADING_QUOTES.length : nextIndex
 }
 
-const LoadingText = ({ asOverlay = false, isLoading = true, minDuration = 1500, className = '' }) => {
+const LoadingText = ({ asOverlay = false, isLoading = true, minDuration = 650, className = '', text = 'journal' }) => {
   const [visible, setVisible] = useState(isLoading)
   const startedAt = useRef(isLoading ? Date.now() : 0)
   const wasLoading = useRef(isLoading)
@@ -65,8 +64,10 @@ const LoadingText = ({ asOverlay = false, isLoading = true, minDuration = 1500, 
       aria-hidden={!visible}
     >
       <span className="loading-text__message">
-        {visible && <span className="loading-text__quote"><GradientText colors={['#f5f3ff', '#c084fc', '#f0abfc', '#f5f3ff']} animationSpeed={7} variant="flow" scale={3} glow={0.12} className="loading-text__gradient" style={{ display: 'block', width: '100%' }}>“{quote}”</GradientText></span>}
+        <span className="loading-text__eyebrow">A moment for {text}</span>
+        {visible && <span className="loading-text__quote">“{quote}”</span>}
         <strong className="loading-text__author">— {author}</strong>
+        <span className="loading-text__frames" aria-hidden="true"><i /><i /><i /></span>
       </span>
     </div>
   ), document.body)

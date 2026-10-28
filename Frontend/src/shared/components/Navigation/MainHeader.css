@@ -1,21 +1,21 @@
 .main-header {
-  width: 100%;
-  min-height: 4.25rem;
+  position: sticky;
+  z-index: 30;
+  top: 0;
   display: flex;
   align-items: center;
-  position: sticky;
-  top: 0;
-  background: #050507;
-  border-bottom: 1px solid rgba(192,132,252,.14);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.24);
-  padding: 0 clamp(1rem, 2vw, 1.75rem);
-  z-index: 30;
+  gap: 1.5rem;
+  width: 100%;
+  min-height: 5.5rem;
+  padding: .8rem var(--content-gutter);
+  border-bottom: 1px solid var(--card-divider);
+  background: var(--app-background);
 }
-
 main { margin-top: 0; }
-
-@media (min-width: 768px) {
-  .main-header {
-    justify-content: space-between;
-  }
+@media (min-width: 1200px) {
+  .main-header { width: calc(100% - 5.5rem); margin-left: 5.5rem; }
+}
+@media (max-width: 640px) {
+  .main-header { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 2.75rem; gap: .55rem .7rem; min-height: 4.75rem; padding: .65rem 1rem .85rem; }
+  .main-header--signed-in { grid-template-columns: 2.5rem minmax(0, 1fr); }
 }

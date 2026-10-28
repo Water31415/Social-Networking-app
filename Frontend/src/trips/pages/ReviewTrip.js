@@ -10,6 +10,19 @@ import './TripPages.css'
 
 const LANGUAGES = [['es','Spanish'],['fr','French'],['de','German'],['hi','Hindi'],['ja','Japanese'],['pt','Portuguese']]
 
+const toLocalDateTime = value => {
+  const date = new Date(value)
+  if (!value || !Number.isFinite(date.getTime())) return ''
+  const pad = part => String(part).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+const fromLocalDateTime = value => {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null
+}
+
 const ReviewTrip = () => {
   const { tripId } = useParams()
   const auth = useContext(AuthContext)
@@ -109,7 +122,7 @@ const ReviewTrip = () => {
   const isCreator = String(creatorId || '') === String(auth.userId || '')
   return <main className="trip-page">
     <ErrorModal error={error} onClear={clearError} /><LoadingText isLoading={isLoading} asOverlay text="trip" />
-    <header className="trip-page__intro"><span>{readOnly ? 'PUBLISHED TRIP' : canPublish ? 'READY TO SHARE' : trip.status.toUpperCase()}</span><h1>{readOnly ? (translatedTrip?.title ?? trip.title) : 'Review your trip'}</h1><p>{readOnly ? 'Trip journal and route.' : 'Make any final changes. Publishing is a separate step.'}</p>
+    <header className="trip-page__intro trip-page__intro--review"><span>{readOnly ? 'PUBLISHED TRIP' : canPublish ? 'READY TO SHARE' : trip.status.toUpperCase()}</span><h1>{readOnly ? (translatedTrip?.title ?? trip.title) : 'Review your trip'}</h1><p>{readOnly ? 'Trip journal and route.' : 'Make any final changes. Publishing is a separate step.'}</p>
       {readOnly && <div className="trip-translate-control"><label>Translate with Google
         <select value={language} onChange={translateTrip}><option value="">Choose language</option>{LANGUAGES.map(([code,name]) => <option key={code} value={code}>{name}</option>)}</select>
       </label>{translationError && <small role="status" className="trip-error">{translationError}</small>}</div>}
@@ -138,7 +151,7 @@ const ReviewTrip = () => {
         <label>Stop name<input value={readOnly ? (translatedTrip?.stops?.[String(stop.id || stop._id)]?.title ?? stop.title) : stop.title} disabled={readOnly} onChange={event => editStop(stop.id || stop._id, 'title', event.target.value)} /></label>
         <label>Address<input value={readOnly ? (translatedTrip?.stops?.[String(stop.id || stop._id)]?.address ?? stop.address ?? '') : (stop.address || '')} disabled={readOnly} onChange={event => editStop(stop.id || stop._id, 'address', event.target.value)} /></label>
         <label>Note<textarea rows="3" value={readOnly ? (translatedTrip?.stops?.[String(stop.id || stop._id)]?.note ?? stop.note ?? '') : (stop.note || '')} disabled={readOnly} onChange={event => editStop(stop.id || stop._id, 'note', event.target.value)} /></label>
-        <label>Visited at<input type="datetime-local" disabled={readOnly} value={new Date(stop.visitedAt).toISOString().slice(0,16)} onChange={event => editStop(stop.id || stop._id, 'visitedAt', new Date(event.target.value).toISOString())} /></label>
+        <label>Visited at<input type="datetime-local" disabled={readOnly} value={toLocalDateTime(stop.visitedAt)} onChange={event => { const visitedAt = fromLocalDateTime(event.target.value); if (visitedAt) editStop(stop.id || stop._id, 'visitedAt', visitedAt) }} /></label>
         <strong>Expenses</strong>
         {(stop.expenses || []).map((expense, index) => <div className="trip-expense-row" key={expense._id || index}><input type="number" min="0" step=".01" aria-label="Expense amount" disabled={readOnly} value={expense.amount} onChange={event => editExpense(stop.id || stop._id, index, 'amount', Number(event.target.value))} /><select aria-label="Expense category" disabled={readOnly} value={expense.category} onChange={event => editExpense(stop.id || stop._id, index, 'category', event.target.value)}><option>Other</option><option>Food</option><option>Transport</option><option>Lodging</option><option>Tickets</option><option>Shopping</option></select><input aria-label="Expense note" disabled={readOnly} value={expense.note || ''} onChange={event => editExpense(stop.id || stop._id, index, 'note', event.target.value)} />{!readOnly && <button type="button" onClick={() => removeExpense(stop.id || stop._id, index)}>×</button>}</div>)}
         {!readOnly && <button type="button" className="trip-secondary" onClick={() => addExpense(stop.id || stop._id)}>Add expense</button>}

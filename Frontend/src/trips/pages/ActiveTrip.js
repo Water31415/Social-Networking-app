@@ -99,7 +99,7 @@ const ActiveTrip = () => {
   if (!trip) return <main className="trip-page"><ErrorModal error={error} onClear={clearError} /><LoadingText isLoading={isLoading} text="trip" />{!isLoading && <p>Trip not found or unavailable.</p>}</main>
   return <main className="trip-page">
     <ErrorModal error={error} onClear={clearError} /><LoadingText isLoading={isLoading} asOverlay text="trip" />
-    <header className="trip-page__intro"><span>TRIP IN PROGRESS</span><h1>{trip.title}</h1><p>{trip.summary?.days || 1} days · {trip.stops?.length || 0} stops · Spent {spent.toFixed(2)} / {Number(trip.plannedBudget || 0).toFixed(2)}</p><button className="trip-primary" type="button" onClick={stopTrip} disabled={isLoading}>{isLoading ? 'Stopping…' : 'Stop trip'}</button></header>
+    <header className="trip-page__intro trip-page__intro--active"><span>TRIP IN PROGRESS</span><h1>{trip.title}</h1><p>{trip.summary?.days || 1} days · {trip.stops?.length || 0} stops · Spent {spent.toFixed(2)} / {Number(trip.plannedBudget || 0).toFixed(2)}</p><button className="trip-primary" type="button" onClick={stopTrip} disabled={isLoading}>{isLoading ? 'Stopping…' : 'Stop trip'}</button></header>
     <section className="trip-active-layout">
       <form className="trip-form" onSubmit={addStop}>
         <h2>Add a stop</h2>

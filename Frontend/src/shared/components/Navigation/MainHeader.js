@@ -3,7 +3,7 @@ import "./MainHeader.css"
 
 
 const MainHeader= props =>{
-        return <header className="main-header">
+        return <header className={`main-header${props.className ? ` ${props.className}` : ''}`}>
             {props.children}
 
         </header>

@@ -101,9 +101,25 @@ const AuthUser =()=>{
     return (
         <React.Fragment>
             <ErrorModal error ={error} onClear={clearError} />
+        <div className="authentication-page">
+        <section className="authentication-story" aria-labelledby="authentication-story-title">
+            <span className="authentication-story__eyebrow">SNAPIT / THE FIELD JOURNAL</span>
+            <h1 id="authentication-story-title">For the places<br/>you <em>remember.</em></h1>
+            <p>A photo, a small discovery, a story from the road. Keep the details that make a place yours.</p>
+            <ol className="authentication-story__notes">
+                <li><span>01</span><div><strong>Find your somewhere</strong><p>Discover places through the people who know them.</p></div></li>
+                <li><span>02</span><div><strong>Keep a little of it</strong><p>Collect photographs, stops, and notes along the way.</p></div></li>
+                <li><span>03</span><div><strong>Pass the story on</strong><p>Share the places you would go back to.</p></div></li>
+            </ol>
+            <span className="authentication-story__footer">PHOTOGRAPHS / PLACES / TRIP NOTES</span>
+        </section>
         <Card className="authentication" >
             <LoadingText isLoading={isLoading} asOverlay text="your account" />
-            <h2>LOGIN</h2>
+            <header className="authentication__header">
+                <span>{isLoginMode ? 'YOUR JOURNAL IS WAITING' : 'OPEN A NEW CHAPTER'}</span>
+                <h2>{isLoginMode ? 'LOGIN' : 'SIGN UP'}</h2>
+                <p>{isLoginMode ? 'Welcome back. There is more to explore.' : 'Make a little room for your next adventure.'}</p>
+            </header>
         <form onSubmit={authSubmitHandler}>
             {!isLoginMode && (<Input
                 element ="input"
@@ -133,8 +149,12 @@ const AuthUser =()=>{
         
             <Button type ="submit" disabled={!formState.isValid}>{isLoginMode?'Login':'SignUp'}</Button>
         </form>
+        <div className="authentication__switch">
+            <span>{isLoginMode ? 'New to SnapIt?' : 'Already have an account?'}</span>
         <Button inverse onClick={switchModeHandler}>{isLoginMode?'SignUp':'Login'}</Button>
+        </div>
         </Card>
+        </div>
         </React.Fragment>
         
     )

@@ -9,9 +9,22 @@ import useTripFeed from "../../trips/hooks/useTripFeed";
 import { backendImageUrl } from "../../shared/Utils/backend-url";
 import Modal from "../../shared/components/UIElements/Modal";
 import { PlaceSearchContext } from "../../shared/components/context/place-search-context";
+import { useHistory, useLocation } from "react-router-dom";
+
+const readSharedPlaceKey = hash => {
+    try {
+        const key = decodeURIComponent(hash.slice(1));
+        return key.startsWith('place-') ? key : '';
+    } catch {
+        return '';
+    }
+};
 
 const PlaceList = props=>{
      const [selectedItemKey, setSelectedItemKey] = useState(null);
+     const history = useHistory();
+     const routeLocation = useLocation();
+     const sharedPlaceKey = readSharedPlaceKey(routeLocation.hash);
      const { searchTerm: searchValue, setSearchTerm: setSearchValue } = useContext(PlaceSearchContext);
      const searchQuery = searchValue.trim().toLowerCase();
 
@@ -77,11 +90,32 @@ const PlaceList = props=>{
         : selectedItem?.data.description;
 
      useEffect(() => {
+        if (!sharedPlaceKey || !(props.items || []).some(place => `place-${place.id || place._id}` === sharedPlaceKey)) return;
+        setSearchValue('');
+        setSelectedItemKey(sharedPlaceKey);
+     }, [sharedPlaceKey, props.items, setSearchValue]);
+
+     useEffect(() => {
         if (selectedItemKey && !selectedItem) setSelectedItemKey(null);
      }, [selectedItem, selectedItemKey]);
 
+     const clearSharedAnchor = () => {
+        if (routeLocation.hash) history.replace({ ...routeLocation, hash: '' });
+     };
+
+     const closePreview = () => {
+        setSelectedItemKey(null);
+        clearSharedAnchor();
+     };
+
+     const handlePlaceDelete = deletedPlaceId => {
+        closePreview();
+        props.onDeletePlace?.(deletedPlaceId);
+     };
+
      const handleItemClick = (item, index, event) => {
         event.preventDefault();
+        clearSharedAnchor();
         setSelectedItemKey(current => current === item.feedKey ? null : item.feedKey);
      };
 
@@ -106,7 +140,7 @@ const PlaceList = props=>{
             columnWidth={250}
             minItemHeight={240}
             gap={16}
-            radius={14}
+            radius={12}
             animateFrom="bottom"
             stagger={0.045}
             duration={0.65}
@@ -121,12 +155,12 @@ const PlaceList = props=>{
         />
         <Modal
             show={Boolean(selectedItem)}
-            onCancel={() => setSelectedItemKey(null)}
+            onCancel={closePreview}
             noForm
             className="post-preview-modal"
             backdropClass="backdrop--blurred"
             dialogLabel={selectedItem?.data.title || 'Post details'}
-            header={<><span>{selectedItem?.data.title || 'Post details'}</span><button className="post-preview-modal__close" type="button" onClick={() => setSelectedItemKey(null)} aria-label="Close post details">×</button></>}
+            header={<><span>{selectedItem?.data.title || 'Post details'}</span><button className="post-preview-modal__close" type="button" onClick={closePreview} aria-label="Close post details">×</button></>}
             headerClass="post-preview-modal__header"
             contentClass="post-preview-modal__content"
             footerClass="post-preview-modal__footer"
@@ -148,7 +182,7 @@ const PlaceList = props=>{
                 shareCount={selectedItem.data.shareCount || 0}
                 distanceKm={selectedItem.data.distanceKm}
                 initiallyExpanded
-                onDelete={props.onDeletePlace}
+                onDelete={handlePlaceDelete}
             />}
         </Modal>
      </div>

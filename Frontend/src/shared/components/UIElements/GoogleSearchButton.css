@@ -1,0 +1,45 @@
+.google-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--accent, #c5a2fa);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.google-search-button svg {
+  flex: 0 0 1.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.google-search-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.google-search-button:focus-visible {
+  outline: 2px solid var(--focus-ring, #c084fc);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .google-search-button { transition: none; }
+}

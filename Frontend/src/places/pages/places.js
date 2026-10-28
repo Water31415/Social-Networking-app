@@ -22,6 +22,11 @@ const Places = () => {
   const submittedLoadingLabel = routeLocation.state?.postSubmitLoadingText;
   const showCreatePanel = auth.isLoggedIn && new URLSearchParams(routeLocation.search).get('create') === '1';
   const closeCreatePanel = () => history.replace('/');
+  const placeDeleteHandler = deletedPlaceId => {
+    const keepPlace = place => String(place.id || place._id) !== String(deletedPlaceId);
+    setLoadedPlaces(current => current?.filter(keepPlace) ?? current);
+    setNearbyPlaces(current => current?.filter(keepPlace) ?? current);
+  };
 
   useEffect(() => {
     if (!submittedLoadingLabel) return;
@@ -89,8 +94,6 @@ const Places = () => {
           ? placeData.map(place => ({ ...place, id: (place.id || place._id).toString() }))
           : [];
         setLoadedPlaces(places);
-        const placeAnchor = window.location.hash.slice(1);
-        if (placeAnchor) setTimeout(() => document.getElementById(placeAnchor)?.scrollIntoView({ behavior: 'smooth' }), 0);
       } catch {
         // useHttpClient exposes the error to ErrorModal.
       }
@@ -103,11 +106,25 @@ const Places = () => {
     <div className={`places-page${showCreatePanel ? ' places-page--with-create' : ''}`}>
       {showCreatePanel && <aside className="places-page__create"><AddPlaceOptions onClose={closeCreatePanel} /></aside>}
       <section className="places-page__feed" aria-label="Places feed">
+        <header className="places-page__intro">
+          <div>
+            <p className="places-page__eyebrow"><span aria-hidden="true" />The SnapIt journal</p>
+            <h1>{nearbyPlaces ? <>Around <em>your corner.</em></> : <>Somewhere <em>worth sharing.</em></>}</h1>
+          </div>
+          <p className="places-page__intro-note">A place. A photograph. A story.<br /> See the world through someone else's lens.</p>
+        </header>
+        <div className="places-page__toolbar" aria-label="Explore places">
+          <div className="places-page__filters">
+            <button type="button" className={!nearbyPlaces ? 'is-active' : ''} aria-pressed={!nearbyPlaces} onClick={() => { if (nearbyPlaces) findNearbyPlaces(); }}>All places</button>
+            <button type="button" className={nearbyPlaces ? 'is-active' : ''} aria-pressed={Boolean(nearbyPlaces)} disabled={isLoading} onClick={() => { if (!auth.isLoggedIn) history.push('/auth'); else if (!nearbyPlaces) findNearbyPlaces(); }}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" /></svg>Near you</button>
+          </div>
+          <span className="places-page__collection-note">{nearbyPlaces ? 'Within 100 km of you' : 'Collected by the community'}<span aria-hidden="true"> ↗</span></span>
+        </div>
         <ErrorModal error={error} onClear={clearError} />
         {locationError && <p className="places-location-error" role="status">{locationError}</p>}
         <LoadingText isLoading={!showCreatePanel && (isLoading || Boolean(postSubmitLoadingText))} text={postSubmitLoadingText || 'places'} />
 
-        {!isLoading && (nearbyPlaces || loadedPlaces) && <PlaceList items={nearbyPlaces || loadedPlaces} includeTripFeed={!nearbyPlaces} />}
+        {!isLoading && (nearbyPlaces || loadedPlaces) && <PlaceList items={nearbyPlaces || loadedPlaces} includeTripFeed={!nearbyPlaces} onDeletePlace={placeDeleteHandler} />}
       </section>
     </div>
   );

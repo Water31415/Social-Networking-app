@@ -45,10 +45,6 @@ export const useForm=(intitalInputs,intitalFormValidity)=>{
             ,inputId:id
         })
     },[])
-    const placeSubmitHandler=event=>{
-        event.preventDefault()
-
-    }
     const setFormData =useCallback((inputData,formValidity)=>{
         dispatch({
             type:'SET_DATA',

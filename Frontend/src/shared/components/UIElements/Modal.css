@@ -21,12 +21,15 @@
   width: 100%;
   flex: 0 0 auto;
   padding: .9rem 1rem;
-  background: linear-gradient(120deg, #1b1524, #111319);
-  color: white;
+  background: var(--surface-raised);
+  color: var(--text-primary);
 }
 
 .modal__header h2 {
   margin: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 400;
 }
 
 .modal__content {

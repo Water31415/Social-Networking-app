@@ -1,20 +1,26 @@
 .place-form {
+  position: relative;
   list-style: none;
-  margin: 0 auto;
-  padding: 1rem;
-  width: 90%;
-  max-width: 40rem;
-  border: 1px solid var(--card-border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  width: min(calc(100% - 2 * max(1rem, var(--content-gutter))), 44rem);
+  margin: 1rem auto 4rem;
+  padding: clamp(1.35rem, 4vw, 2.75rem);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent);
   border-radius: var(--radius-card);
-  background: var(--card-background);
+  background: var(--surface);
   color: var(--text-primary);
-  box-shadow: var(--shadow-soft);
+  box-shadow: none;
 }
-
-.place-location-error {
-  display: block;
-  margin: -.4rem 0 .6rem;
-  color: #fda4af;
-  line-height: 1.45;
+.place-form__header { padding-bottom: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.place-form__header > span { color: var(--accent); font-family: var(--font-mono); font-size: .61rem; letter-spacing: .13em; }
+.place-form__header h1 { margin: .6rem 0 .5rem; font-family: var(--font-display); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 400; letter-spacing: -.045em; line-height: 1.12; }
+.place-form__header p { margin: 0; color: var(--text-secondary); font-size: .88rem; }
+.place-form > .form-control { margin-top: 1.6rem; margin-bottom: 1.6rem; }
+.place-form > .button--inverse { margin-top: -.5rem; font-size: .78rem; }
+.place-form > .button[type="submit"] { display: flex; min-width: 10rem; margin: 1.8rem 0 0 auto; }
+.place-form > p[role="alert"],
+.place-location-error { display: block; margin: .7rem 0 0; color: #e4a294; font-size: .8rem; line-height: 1.65; }
+@media (max-width: 480px) {
+  .place-form { margin-top: .25rem; }
+  .place-form > .button[type="submit"] { width: 100%; }
 }

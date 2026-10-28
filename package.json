@@ -1,0 +1,14 @@
+{
+  "name": "snapit-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:frontend": "npm --prefix Frontend start",
+    "start:backend": "npm --prefix Backend start",
+    "build": "npm --prefix Frontend run build",
+    "test": "node --test Backend/tests/backend-regressions.cjs Backend/tests/frontend-regressions.cjs Backend/tests/trip-regressions.cjs",
+    "test:api": "node Backend/tests/http-smoke.cjs",
+    "test:database": "node Backend/tests/mongo-connectivity.cjs",
+    "test:live": "node Backend/tests/live-smoke.cjs"
+  }
+}

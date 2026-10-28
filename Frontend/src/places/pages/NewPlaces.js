@@ -20,6 +20,7 @@ const NewPlace = ()=>{
     const [locationLoading, setLocationLoading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [locationError, setLocationError] = useState('')
+    const [submissionError, setSubmissionError] = useState('')
     const [formState,titleInputHandler]=useForm(
         {
             title :{
@@ -32,6 +33,10 @@ const NewPlace = ()=>{
             },
             address : {
                 value :'',
+                isValid: false
+            },
+            images: {
+                value: [],
                 isValid: false
             }
         
@@ -65,13 +70,24 @@ const NewPlace = ()=>{
     }
      const placeSubmitHandler = async event => {
     event.preventDefault();
+    if (isSubmitting || isLoading) return
+    const images = formState.inputs.images.value
+    if (!formState.inputs.images.isValid || !Array.isArray(images) || images.length === 0) {
+        setSubmissionError('Please select at least one PNG or JPEG photo before adding your place.')
+        return
+    }
+    if (!formState.isValid) {
+        setSubmissionError('Please complete all required fields before adding your place.')
+        return
+    }
+    setSubmissionError('')
     setIsSubmitting(true)
     try {
         const formData = new FormData()
         formData.append('title',formState.inputs.title.value)
         formData.append('description',formState.inputs.description.value)
         formData.append('address',formState.inputs.address.value)
-        formState.inputs.images.value.forEach(image=>formData.append('images',image))
+        images.forEach(image=>formData.append('images',image))
         await sendRequest(backendUrl('api/places'),
             'POST',
         formData ,{
@@ -93,6 +109,11 @@ const NewPlace = ()=>{
         
          <form className="place-form" onSubmit={placeSubmitHandler}>
             <LoadingText isLoading={isSubmitting} asOverlay text="your place" />
+            <header className="place-form__header">
+                <span>FIELD NOTE / NEW PLACE</span>
+                <h1>A place worth keeping.</h1>
+                <p>Add the photos, the details, and the spot on the map.</p>
+            </header>
             <Input id="title"
             element ="input"
              type="text" 
@@ -119,9 +140,10 @@ const NewPlace = ()=>{
                 {locationLoading ? 'Finding location…' : 'Use my current location'}
              </Button>
              {locationError && <small className="place-location-error" role="alert">{locationError}</small>}
+             {submissionError && <p role="alert">{submissionError}</p>}
 
 
-            <Button type="submit" disabled={!formState.isValid || isLoading}>
+            <Button type="submit" disabled={!formState.isValid || isLoading || isSubmitting}>
                 {isSubmitting ? 'ADDING PLACE…' : 'ADD PLACE'}
             </Button>
     </form>

@@ -24,6 +24,7 @@ const NavLinks = props =>{
     const history=useHistory()
     const [nearbyActive,setNearbyActive]=useState(false)
     const createPanelOpen=location.pathname==='/' && new URLSearchParams(location.search).get('create')==='1'
+    const captions = {'MY PLACES':'My places','FIND NEAR ME':'Nearby','SHOW ALL PLACES':'Explore','ADD PLACE':'New entry','DASHBOARD':'Field notes','AUTHENTICATE':'Join in','LOGOUT':'Sign out'}
 
     useEffect(()=>{
         const handleNearbyState=event=>setNearbyActive(Boolean(event.detail && event.detail.active))
@@ -43,7 +44,7 @@ const NavLinks = props =>{
         {label:'LOGOUT',onClick:auth.logout}
     )
     else items.push({label:'AUTHENTICATE',to:'/auth'})
-    if(auth.isLoggedIn && location.pathname==='/') items.unshift({
+    if(props.variant !== 'sidebar' && auth.isLoggedIn && location.pathname==='/') items.unshift({
         label:nearbyActive?'SHOW ALL PLACES':'FIND NEAR ME',
         action:true,
         active:nearbyActive,
@@ -53,14 +54,14 @@ const NavLinks = props =>{
         const logoutItem=items.find(item=>item.label==='LOGOUT');
         const mainItems=items.filter(item=>item.label!=='LOGOUT');
         return <nav className="icon-sidebar" aria-label="Main navigation">
-            <NavLink to="/" exact className="icon-sidebar__brand" aria-label="SnapIt — all places" title="All places">S</NavLink>
+            <NavLink to="/" exact className="icon-sidebar__brand" aria-label="SnapIt — all places" title="All places">S<span aria-hidden="true">.</span></NavLink>
             <ul className="icon-sidebar__items">
                 {mainItems.map(item=><li key={item.label}>
-                    {item.to ? <NavLink to={item.to} exact={item.exact} className={`icon-sidebar__link${item.label==='DASHBOARD'&&props.hasNewMilestone?' is-milestone-new':''}`} activeClassName="is-active" onClick={item.label==='DASHBOARD'?props.onDashboardOpen:undefined} title={item.label==='DASHBOARD'&&props.hasNewMilestone?'Dashboard — new milestone':item.label} aria-label={item.label==='DASHBOARD'&&props.hasNewMilestone?'Dashboard, new milestone':item.label}><NavIcon name={item.label}/><span className="icon-sidebar__tooltip">{item.label==='DASHBOARD'&&props.hasNewMilestone?'New milestone':item.label}</span></NavLink> : <button type="button" className={`icon-sidebar__link${item.active?' is-active':''}`} onClick={item.onClick} title={item.label} aria-label={item.label} aria-pressed={item.action?item.active:undefined}><NavIcon name={item.label}/><span className="icon-sidebar__tooltip">{item.label}</span></button>}
+                    {item.to ? <NavLink to={item.to} exact={item.exact} className={`icon-sidebar__link${item.label==='DASHBOARD'&&props.hasNewMilestone?' is-milestone-new':''}`} activeClassName="is-active" onClick={item.label==='DASHBOARD'?props.onDashboardOpen:undefined} title={item.label==='DASHBOARD'&&props.hasNewMilestone?'Dashboard — new milestone':item.label} aria-label={item.label==='DASHBOARD'&&props.hasNewMilestone?'Dashboard, new milestone':item.label}><NavIcon name={item.label}/><span className="icon-sidebar__caption" aria-hidden="true">{captions[item.label]}</span><span className="icon-sidebar__tooltip">{item.label==='DASHBOARD'&&props.hasNewMilestone?'New milestone':item.label}</span></NavLink> : <button type="button" className={`icon-sidebar__link${item.active?' is-active':''}`} onClick={item.onClick} title={item.label} aria-label={item.label} aria-pressed={item.action?item.active:undefined}><NavIcon name={item.label}/><span className="icon-sidebar__caption" aria-hidden="true">{captions[item.label]}</span><span className="icon-sidebar__tooltip">{item.label}</span></button>}
                 </li>)}
             </ul>
             <div className="icon-sidebar__bottom">
-                {logoutItem && <button type="button" className="icon-sidebar__link" onClick={logoutItem.onClick} title={logoutItem.label} aria-label={logoutItem.label}><NavIcon name={logoutItem.label}/><span className="icon-sidebar__tooltip">{logoutItem.label}</span></button>}
+                {logoutItem && <button type="button" className="icon-sidebar__link" onClick={logoutItem.onClick} title={logoutItem.label} aria-label={logoutItem.label}><NavIcon name={logoutItem.label}/><span className="icon-sidebar__caption" aria-hidden="true">{captions[logoutItem.label]}</span><span className="icon-sidebar__tooltip">{logoutItem.label}</span></button>}
             </div>
         </nav>;
     }

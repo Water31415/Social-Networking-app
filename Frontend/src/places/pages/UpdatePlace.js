@@ -79,11 +79,9 @@ const UpdatePlace =()=>{
                 
                 
                 history.push('/'+  auth.userId + '/places')
-                console.log(formState);
 
             
         } catch (error) {
-            console.log(error);
         }
     }   
 
@@ -93,6 +91,11 @@ const UpdatePlace =()=>{
         <LoadingText isLoading={!placeLookupComplete || isLoading} text="place" />
         {placeLookupComplete && !loadedPlaces && !error && <div className="center"><Card><h2>Could not find place</h2></Card></div>}
         {!isLoading && loadedPlaces && (<form className="place-form" onSubmit={placeUpdateSubmitHandler} >
+            <header className="place-form__header">
+                <span>FIELD NOTE / EDIT PLACE</span>
+                <h1>Refine the details.</h1>
+                <p>A fresh title or a little more of the story.</p>
+            </header>
             <Input
             id="title"
             element ="input"
@@ -102,7 +105,7 @@ const UpdatePlace =()=>{
             errorText="Please enter valid title"
             onInput ={titleInputHandler}
             value={loadedPlaces.title}
-            valid ={true}
+            isValid ={true}
             />
             <Input
             id="description"
@@ -112,7 +115,7 @@ const UpdatePlace =()=>{
             errorText="Please enter description"
             onInput ={titleInputHandler}
             value={loadedPlaces.description}
-            valid ={true}
+            isValid ={true}
             />
             <Button  type="submit" disabled={!formState.isValid}>Submit</Button>
         </form>)}

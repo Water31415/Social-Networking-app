@@ -14,6 +14,9 @@ const NearbyPlaces=()=>{
     const [locationError,setLocationError]=useState('')
     const [searching,setSearching]=useState(false)
     const findingNearby = isLoading || searching
+    const placeDeleteHandler = deletedPlaceId => {
+        setPlaces(current => current?.filter(place => String(place.id || place._id) !== String(deletedPlaceId)) ?? current)
+    }
     const findNearby=()=>{
         if (findingNearby) return
         setLocationError('')
@@ -48,7 +51,7 @@ const NearbyPlaces=()=>{
         </Card>}
         {locationError && <p className="nearby-page__message" role="status">{locationError}</p>}
         <LoadingText isLoading={findingNearby} text={searching && !isLoading ? 'your location' : 'nearby places'} />
-        {places && !findingNearby && (places.length ? <PlaceList items={places} includeTripFeed={false}/> : <Card className="nearby-page__message"><p>No places found within 100 km. Try again later.</p></Card>)}
+        {places && !findingNearby && (places.length ? <PlaceList items={places} includeTripFeed={false} onDeletePlace={placeDeleteHandler}/> : <Card className="nearby-page__message"><p>No places found within 100 km. Try again later.</p></Card>)}
     </main>
 }
 

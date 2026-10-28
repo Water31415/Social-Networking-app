@@ -1,54 +1,42 @@
-.form-control {
-  margin: 1.15rem 0;
-}
-
+.form-control { min-width: 0; margin: 1.35rem 0; }
 .form-control label,
 .form-control input,
-.form-control textarea {
-  display: block;
-}
-
-.form-control label {
-  color: var(--text-primary);
-  font-size: .9rem;
-  font-weight: 620;
-  margin-bottom: 0.5rem;
-}
-
+.form-control textarea { display: block; }
+.form-control label { margin-bottom: .6rem; color: var(--text-secondary); font-family: var(--font-mono); font-size: .65rem; font-weight: 500; line-height: 1.5; letter-spacing: .085em; text-transform: uppercase; }
 .form-control input,
 .form-control textarea,
 .form-control select {
   width: 100%;
-  min-height: 2.8rem;
-  font: inherit;
+  min-height: 2.9rem;
+  padding: .75rem .9rem;
   border: 1px solid var(--border);
-  border-radius: 11px;
-  background: #0d0e13;
+  border-radius: var(--radius-control);
+  background: var(--app-background);
   color: var(--text-primary);
-  padding: 0.7rem .85rem;
-  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  font: inherit;
+  font-size: .9rem;
+  line-height: 1.6;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-
+.form-control textarea { min-height: 8rem; resize: vertical; }
+.form-control input:hover:not(:disabled),
+.form-control textarea:hover:not(:disabled),
+.form-control select:hover:not(:disabled) { border-color: var(--text-secondary); }
 .form-control input:focus,
 .form-control textarea:focus,
-.form-control select:focus {
-  background: #11121a;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 18px rgba(168,85,247,.08);
-  outline: none;
-}
-
+.form-control select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 .form-control input::placeholder,
-.form-control textarea::placeholder { color: #737d8d; }
-
+.form-control textarea::placeholder { color: var(--text-secondary); opacity: .65; }
+.form-control input:disabled,
+.form-control textarea:disabled,
+.form-control select:disabled { background: var(--surface-raised); color: var(--text-secondary); cursor: not-allowed; }
+.form-control > p { margin: .65rem 0 0; color: var(--text-secondary); font-size: .74rem; line-height: 1.6; }
 .form-control--invalid label,
-.form-control--invalid p {
-  color: #ff8c9c;
-}
-
+.form-control--invalid p { color: #e4a294; }
 .form-control--invalid input,
 .form-control--invalid textarea,
-.form-control--invalid select {
-  border-color: #d45b70;
-  background: #26141a;
-}
+.form-control--invalid select { border-color: #ab7568; }
+.form-control--invalid input:focus,
+.form-control--invalid textarea:focus,
+.form-control--invalid select:focus { border-color: #e4a294; box-shadow: 0 0 0 3px rgba(228, 162, 148, .1); }
+@media (prefers-reduced-motion: reduce) { .form-control input, .form-control textarea, .form-control select { transition: none; } }

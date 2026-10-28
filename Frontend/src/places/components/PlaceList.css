@@ -1,6 +1,6 @@
 .place-list {
-  width: min(100%, 1180px);
-  max-width: 1180px;
+  width: min(100%, 1320px);
+  max-width: 1320px;
   margin: 0 auto 2rem;
 }
 
@@ -8,9 +8,9 @@
   display: inline-flex;
   padding: 0.55rem 1rem;
   border: 1px solid rgba(192, 132, 252, 0.4);
-  border-radius: 999px;
-  color: #e9d5ff;
-  background: rgba(168, 85, 247, 0.12);
+  border-radius: 7px;
+  color: var(--accent);
+  background: var(--accent-soft);
   font: inherit;
   cursor: pointer;
 }
@@ -18,7 +18,7 @@
 .place-list__empty {
   max-width: 38rem;
   margin: 2rem auto;
-  padding: 2rem;
+  padding: clamp(2rem, 5vw, 4rem);
   color: var(--text-primary, #f4f3fa);
   text-align: center;
 }
@@ -26,6 +26,8 @@
 .place-list__empty p {
   color: var(--text-secondary, #b8bdc8);
 }
+
+.place-list__empty h2 { font-family: var(--font-display); font-size: 2rem; font-weight: 400; }
 
 .place-list__clear-search:focus-visible {
   outline: 2px solid #c084fc;
@@ -38,7 +40,7 @@
 }
 
 .backdrop--blurred {
-  background: rgba(3, 4, 8, 0.72);
+  background: rgba(5, 8, 6, 0.82);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
@@ -52,9 +54,9 @@
   max-width: 76rem;
   max-height: 92vh;
   overflow: hidden;
-  border-color: rgba(192, 132, 252, 0.25);
-  border-radius: 20px;
-  background: #090a0d;
+  border-color: var(--border);
+  border-radius: 16px;
+  background: var(--app-background);
 }
 
 .post-preview-modal .post-preview-modal__header {
@@ -64,7 +66,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem 1.25rem;
-  background: rgba(17, 18, 24, 0.96);
+  background: var(--surface);
 }
 
 .post-preview-modal .post-preview-modal__header h2 {
@@ -74,19 +76,22 @@
   justify-content: space-between;
   gap: 1rem;
   margin: 0;
-  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  width: 100%;
+  font-size: .85rem;
+  font-weight: 500;
+  letter-spacing: .01em;
 }
 
 .post-preview-modal__close {
   flex: 0 0 auto;
   display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 50%;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: var(--text-primary);
+  background: transparent;
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;

@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test tests/backend-regressions.cjs tests/trip-regressions.cjs",
+    "test:api": "node tests/http-smoke.cjs",
     "start": "nodemon app.js"
   },
   "dependencies": {

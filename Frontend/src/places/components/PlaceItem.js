@@ -4,6 +4,7 @@ import Card from '../../shared/components/UIElements/Card'
 import Button from '../../shared/components/FormElements/Button'
 import Modal from '../../shared/components/UIElements/Modal'
 import Map from '../../shared/components/UIElements/Map'
+import GoogleSearchButton from '../../shared/components/UIElements/GoogleSearchButton'
 import { AuthContext } from '../../shared/components/context/auth-context'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import ErrorModal from '../../shared/components/UIElements/ErrorModal'
@@ -85,7 +86,7 @@ const PlaceItem=props=>{
         setShowDeleteWarning(false)
         try {
             await sendRequest(backendUrl(`api/places/${props.id}`),'DELETE',null,{Authorization:`Bearer ${auth.token}`})
-            props.onDelete(props.id)
+            props.onDelete?.(props.id)
         } catch(error) {}
     }
 
@@ -114,6 +115,9 @@ const PlaceItem=props=>{
                             <h3>{translated ? translated[1] : props.address}</h3>
                             <p>{translated ? translated[2] : props.description}</p>
                             {Number.isFinite(props.distanceKm) && <small>{props.distanceKm} km away</small>}
+                            <div className="place-item__search">
+                                <GoogleSearchButton query={[props.title, props.address].filter(Boolean).join(' ')} />
+                            </div>
                             <label className="place-item__translate">Translate with Google
                                 <select value={language} onChange={translate}><option value="">Choose language</option>{LANGUAGES.map(([code,name])=><option key={code} value={code}>{name}</option>)}</select>
                             </label>

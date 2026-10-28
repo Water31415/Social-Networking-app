@@ -3,6 +3,30 @@
   width: 100%;
 }
 
+.places-masonry { counter-reset: journal-frame; }
+.places-masonry .masonry__item { counter-increment: journal-frame; }
+.places-masonry .masonry__media::before {
+  position: absolute;
+  z-index: 2;
+  top: .85rem;
+  left: .85rem;
+  padding: .25rem .4rem;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 3px;
+  color: #fff;
+  background: rgba(8,12,9,.45);
+  font-family: var(--font-mono);
+  font-size: .6rem;
+  letter-spacing: .08em;
+  content: counter(journal-frame, decimal-leading-zero);
+  pointer-events: none;
+}
+.places-masonry .masonry__card::after { position:absolute; z-index:2; top:.75rem; right:.75rem; display:grid; place-items:center; width:2rem; height:2rem; border:1px solid rgba(255,255,255,.5); border-radius:50%; background:rgba(8,12,9,.55); color:#fff; content:'↗'; opacity:0; transform:translate(-3px,3px); transition:opacity 160ms ease,transform 160ms ease; pointer-events:none; }
+.places-masonry .masonry__card:hover::after,.places-masonry .masonry__card:focus-visible::after { opacity:1; transform:none; }
+.places-masonry .masonry__caption { gap:.35rem; padding:4rem 1.1rem 1.1rem; }
+.places-masonry .masonry__title { font-size:1.02rem; font-weight:600; letter-spacing:-.025em; }
+.places-masonry .masonry__text { font-size:.7rem; line-height:1.5; opacity:.84; }
+
 .masonry__item {
   position: absolute;
   top: 0;

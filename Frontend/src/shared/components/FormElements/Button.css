@@ -1,77 +1,38 @@
 .button {
-  font: inherit;
-  min-height: 2.75rem;
-  padding: 0.62rem 1.1rem;
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-  background: linear-gradient(135deg, #a855f7, #8539d7);
-  color: white;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  font-weight: 650;
-  letter-spacing: -.01em;
-  box-shadow: 0 5px 16px rgba(168, 85, 247, 0.17), inset 0 1px rgba(255,255,255,.1);
-  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.button:hover,
-.button:active {
-  background: linear-gradient(135deg, #b66bf7, #933be7);
-  border-color: var(--accent-hover);
-  box-shadow: 0 7px 20px rgba(168, 85, 247, 0.27);
-  transform: translateY(-1px);
-}
-
-.button:active:not(:disabled) { transform: translateY(0) scale(.98); }
-.button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
-
-.button--inverse {
-  border-color: rgba(192,132,252,.45);
-  background: rgba(168,85,247,.07);
-  color: #c084fc;
-}
-
-.button--inverse:hover,
-.button--inverse:active {
-  color: white;
+  gap: .5rem;
+  min-height: 2.75rem;
+  margin-right: .5rem;
+  padding: .65rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-control);
   background: var(--accent);
+  color: var(--app-background);
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: .005em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
-
-.button--danger {
-  background: linear-gradient(135deg, #b83253, #92253f);
-  border-color: #a52846;
-}
-
-.button--danger:hover,
-.button--danger:active {
-  background: linear-gradient(135deg, #d84a68, #ac2d4b);
-  border-color: #c43d59;
-}
-
+.button:hover:not(:disabled),
+.button:active:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--app-background); }
+.button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.button--inverse { border-color: var(--border); background: transparent; color: var(--text-primary); }
+.button--inverse:hover:not(:disabled),
+.button--inverse:active:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-hover); }
+.button--danger { border-color: #775047; background: transparent; color: #e4a294; }
+.button--danger:hover:not(:disabled),
+.button--danger:active:not(:disabled) { border-color: #e4a294; background: #35231e; color: #f0c4b9; }
 .button:disabled,
 .button:hover:disabled,
-.button:active:disabled {
-  background: #303a46;
-  color: #8b98a7;
-  border-color: #303a46;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.button--small {
-  font-size: 0.8rem;
-}
-
-.button--big {
-  font-size: 1.5rem;
-}
-
-.button--inverse {
-  box-shadow: none;
-}
+.button:active:disabled { border-color: var(--border); background: var(--surface-raised); color: var(--text-secondary); cursor: not-allowed; opacity: .6; box-shadow: none; transform: none; }
+.button--small { min-height: 2.2rem; padding: .4rem .75rem; font-size: .75rem; }
+.button--big { min-height: 3.2rem; padding: .8rem 1.4rem; font-size: 1rem; }
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import "./Map.css";
-import * as L from "./leaflet-src.esm";
-import "./leaflet.css";
+import * as L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const Map = props => {
     const mapRef = useRef(null);

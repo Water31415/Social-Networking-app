@@ -79,7 +79,7 @@ const StartTrip = () => {
   return <main className="trip-page">
     <ErrorModal error={error} onClear={clearError} />
     <LoadingText isLoading={isSubmitting} asOverlay text="your trip" />
-    <header className="trip-page__intro"><span>SNAPIT! JOURNAL</span><h1>Start a trip</h1><p>Capture the places, moments, and spending as you go.</p></header>
+    <header className="trip-page__intro trip-page__intro--start"><span>SNAPIT! JOURNAL</span><h1>Start a trip</h1><p>Capture the places, moments, and spending as you go.</p></header>
     <form className="trip-form" onSubmit={submit}>
       <label>Trip name<input name="title" value={form.title} onChange={change} required maxLength="100" placeholder="A weekend in the mountains" /></label>
       <label>Planned budget<input name="plannedBudget" type="number" min="0" step="0.01" value={form.plannedBudget} onChange={change} placeholder="0.00" /></label>
