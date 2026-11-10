@@ -23,9 +23,56 @@
   --card-divider: rgba(219, 225, 207, 0.11);
   --focus-ring: rgba(216, 180, 254, 0.96);
   --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.32);
+  --on-accent: #17121e;
+  --signal-soft: rgba(206, 229, 155, .08);
+  --signal-border: rgba(206, 229, 155, .4);
+  --signal-hover: #deefb9;
+  --on-signal: #17200e;
+  --error: #e4a294;
+  --error-border: #ab7568;
+  --error-surface: #35231e;
+  --backdrop: rgba(4, 4, 7, .76);
+  --loading-overlay: rgba(8, 12, 9, .86);
+  --modal-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+  --badge-blue: #b8c9dc;
+  --badge-pink: #d7b0bd;
+  --badge-amber: #ddc699;
   --radius-card: 16px;
   --radius-control: 10px;
   --content-gutter: clamp(1rem, 3.8vw, 3.5rem);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --app-background: #f5f1e8;
+  --surface: #fffcf5;
+  --surface-raised: #eae6db;
+  --text-primary: #292d24;
+  --text-secondary: #64695d;
+  --accent: #72509c;
+  --accent-hover: #5b387e;
+  --accent-soft: rgba(114, 80, 156, .08);
+  --signal: #4f6c2b;
+  --border: rgba(53, 65, 40, .23);
+  --card-background: #fffcf5;
+  --card-border: rgba(53, 65, 40, .2);
+  --card-divider: rgba(53, 65, 40, .13);
+  --focus-ring: #72509c;
+  --shadow-soft: 0 16px 40px rgba(73, 63, 40, .08);
+  --on-accent: #fffaf2;
+  --signal-soft: rgba(79, 108, 43, .08);
+  --signal-border: rgba(79, 108, 43, .35);
+  --signal-hover: #3e5820;
+  --on-signal: #fffaf2;
+  --error: #a13f36;
+  --error-border: #ba776c;
+  --error-surface: #fae8e0;
+  --backdrop: rgba(34, 38, 29, .43);
+  --loading-overlay: rgba(245, 241, 232, .9);
+  --modal-shadow: 0 24px 80px rgba(50, 44, 30, .18);
+  --badge-blue: #4b6e8d;
+  --badge-pink: #99586e;
+  --badge-amber: #94691d;
 }
 
 html {
@@ -33,7 +80,7 @@ html {
   font-family: var(--font-ui);
   font-size: 16px;
   overflow-x: clip;
-  scrollbar-color: #455044 var(--app-background);
+  scrollbar-color: var(--text-secondary) var(--app-background);
   scrollbar-width: thin;
 }
 
@@ -81,7 +128,7 @@ select {
 }
 
 input, textarea, select {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 button:not(:disabled) { cursor: pointer; }

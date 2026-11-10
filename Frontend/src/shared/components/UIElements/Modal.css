@@ -9,7 +9,7 @@
   flex-direction: column;
   background: var(--surface);
   color: var(--text-primary);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62);
+  box-shadow: var(--modal-shadow);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   overflow: hidden;

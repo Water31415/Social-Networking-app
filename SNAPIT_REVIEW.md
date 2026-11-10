@@ -15,7 +15,7 @@ The prior deletion of `Backend/.env.example` and modification of `Frontend/packa
 SnapIt now uses a travel photo-journal visual style. Its dark palette, violet signature, script wordmark, and masonry feed are retained, with warm off-white type, serif display headings, small monospaced annotations, restrained green markers, and thin rules.
 
 - **Navigation:** labeled desktop rail, clearer active states, a new-entry action in the rail, a signed-out join action in the header, a dedicated mobile search row, and Escape-to-close for the mobile drawer. Nearby is available in the feed controls and mobile drawer rather than the icon rail.
-- **Feed:** editorial journal introduction, working All places / Near you controls, numbered photo frames, more readable captions, and quieter hover cues.
+- **Feed:** editorial journal introduction, working All places / Near you controls, clean photo frames, more readable captions, and quieter hover cues.
 - **Post details:** larger desktop photo area, more distinct title/author/address hierarchy, calmer modal styling, stronger touch targets, and the existing Google search action.
 - **Forms and authentication:** a journal-style sign-in composition, consistent labels and controls, dashed photo trays, clearer states, and corrected mobile gutters.
 - **Profiles and dashboard:** a traveler journal header, ruled engagement totals, monthly activity, selected-place detail, and illustrated earned/locked milestone stamps.
@@ -60,7 +60,7 @@ This changes DNS resolution only inside the Node backend process. It does not ch
 
 | Command / check | Result |
 | --- | --- |
-| `npm test` | 60/60 pass: backend 18, frontend 14, trip 28 |
+| `npm test` | 65/65 pass: backend 18, frontend 19, trip 28 |
 | `npm run test:api` | 26/26 isolated HTTP checks pass; database/provider effects mocked |
 | `npm run test:database` | Live MongoDB connectivity and unique active-trip index pass |
 | `npm run test:live` | 5/5 pass: actual startup/index initialization and GET requests for users, places, auth rejection, and unknown route |
@@ -113,3 +113,29 @@ The app currently uses one JWT session token; it has no separate refresh-token f
 `JWT_TTL_SECONDS` in `Backend/.env` overrides the lifetime in seconds. For example, use `JWT_TTL_SECONDS=15` for an even shorter local test, or `JWT_TTL_SECONDS=3600` to return to one hour. Restart the backend and sign in again after changing it. Production defaults to 3600 seconds when no override is set.
 
 Verification: 60 regression tests, 26 isolated API checks, and the production build pass. Browser checks use a temporary server with fixture data; no account or trip records are created or modified.
+
+
+## Achievement collection and app themes — 10 November 2026
+
+- Reworked achievements into larger photo cards with landscape covers, circular milestone stamps, clear Collected/To discover status, and separate readable details. Fronts and backs adapt to the active theme.
+- Added All milestones, Collected, and To discover filters, meaningful empty states, a collection summary, and progress toward each existing backend milestone. Progress uses actual analytics counts and is capped at the goal. Cards remain clickable and keyboard accessible, with reduced-motion support.
+- Added a sun/moon theme switch to the main header for signed-in and guest views, including mobile. Light mode uses warm paper, ink, muted violet, and forest-green accents; dark mode retains the existing SnapIt palette.
+- The initial theme follows the device preference until a choice is saved. The selected mode persists across refreshes and sign-outs, synchronizes across tabs, and loads before the app paints to avoid a wrong-theme flash. Blocked browser storage does not prevent switching.
+- Replaced fixed dark-mode colors in active forms, validation messages, buttons, navigation, dashboards, trip views, loading overlays, dialogs, map controls, and post engagement counts with shared theme tokens.
+- Verification: 65 regression checks pass; the production build compiles without lint warnings. Browser checks cover both themes, achievement filters and flips, theme persistence after refresh, light post details/forms/login, and 390px/320px mobile layouts. Preview data was isolated and read-only; no real account or post records were changed. Temporary preview files and the server were removed after verification.
+
+
+## Playing-card achievement faces
+
+- Replaced the landscape fronts with the five supplied images, stored locally in `Frontend/public/images/achievements/`. Images retain their full composition and use contain sizing, with no cropping, tint, text overlays, body, or milestone stamp on the front.
+- Difficulty mapping: Ace of spades = First Place (one shared place); 10 = Explorer (five places); Jack = Crowd Favorite (ten likes); Queen = Conversation Starter (ten comments); King = Connector (ten shares).
+- Achievement name, requirement, collected status, and actual progress appear only on the reverse. Filters keep each achievement's card assignment stable. The desktop board presents all five cards in one row, with responsive layouts for tablets and phones.
+- Verification: all 65 tests and the production build pass. Browser checks confirmed the complete fronts, King/Connector reverse, Ace/First Place reverse on mobile, and light/dark presentation. Temporary preview files and server were removed.
+
+
+## Black and theme-accent card styling
+
+- Card fronts and backs now use pure black backgrounds with permanent outlines in the current interface accent color.
+- A reusable SVG display filter removes the original white backgrounds and red/blue/yellow pigments from the supplied artwork, rendering its ink in the theme accent. Original image files remain intact, with complete card compositions retained.
+- Removed individual milestone color variants. Collection totals, card progress, and earned indicators now follow the same accent treatment; reverse-side information uses readable neutral text on black in both themes.
+- Verification: 65 regression tests and the production build pass. Browser checks confirmed the monochrome artwork, accent outlines, black reverse face, and light/dark theme updates. Temporary preview server and file were removed.

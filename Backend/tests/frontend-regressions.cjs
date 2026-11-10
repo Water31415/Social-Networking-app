@@ -124,6 +124,9 @@ const UpdatePlace = require(path.join(sourceRoot, 'places/pages/UpdatePlace.js')
 const PlaceList = require(path.join(sourceRoot, 'places/components/PlaceList.js')).default;
 const Places = require(path.join(sourceRoot, 'places/pages/places.js')).default;
 const NearbyPlaces = require(path.join(sourceRoot, 'places/pages/NearbyPlaces.js')).default;
+const { ThemeProvider, THEME_STORAGE_KEY } = require(path.join(sourceRoot, 'shared/components/context/theme-context.js'));
+const ThemeToggle = require(path.join(sourceRoot, 'shared/components/Navigation/ThemeToggle.js')).default;
+const AchievementCollection = require(path.join(sourceRoot, 'user/components/AchievementCollection.js')).default;
 const auth = { token: 'mock-token', userId: 'user1', isLoggedIn: true };
 
 async function mount(t, Component, route = '/') {
@@ -381,6 +384,131 @@ test('a backend session rejection redirects once and manual logout cancels the e
   await act(async () => manual.session.logout());
   assert.equal(manual.timers.size, 0);
   assert.deepEqual(manual.navigations, [], 'Manual logout does not run a later expiry reload');
+});
+
+function installThemeEnvironment(t, light = false) {
+  const originalMatchMedia = window.matchMedia;
+  const listeners = new Set();
+  const media = {
+    matches: light,
+    addEventListener: (type, listener) => listeners.add(listener),
+    removeEventListener: (type, listener) => listeners.delete(listener),
+  };
+  window.matchMedia = () => media;
+  window.localStorage.clear();
+  const meta = document.createElement('meta');
+  meta.name = 'theme-color';
+  document.head.appendChild(meta);
+  t.after(() => {
+    window.matchMedia = originalMatchMedia;
+    window.localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+    meta.remove();
+  });
+  return { listeners, meta, change: value => {
+    media.matches = value;
+    listeners.forEach(listener => listener({ matches: value }));
+  } };
+}
+
+const ThemeControl = () => React.createElement(ThemeProvider, null, React.createElement(ThemeToggle));
+
+test('theme toggle overrides the system preference, persists on remount and updates browser chrome', async t => {
+  const environment = installThemeEnvironment(t, true);
+  window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+  const container = await mount(t, ThemeControl);
+  const control = container.querySelector('[role="switch"]');
+  assert.equal(control.getAttribute('aria-checked'), 'true');
+  assert.equal(document.documentElement.dataset.theme, 'dark');
+  await act(async () => Simulate.click(control));
+  assert.equal(document.documentElement.dataset.theme, 'light');
+  assert.equal(control.getAttribute('aria-checked'), 'false');
+  assert.equal(window.localStorage.getItem(THEME_STORAGE_KEY), 'light');
+  assert.equal(environment.meta.content, '#f5f1e8');
+  const restored = await mount(t, ThemeControl);
+  assert.equal(restored.querySelector('[role="switch"]').getAttribute('aria-checked'), 'false');
+});
+
+test('system theme changes apply until an explicit choice is made, and other tabs synchronize', async t => {
+  const environment = installThemeEnvironment(t);
+  const container = await mount(t, ThemeControl);
+  assert.equal(document.documentElement.dataset.theme, 'dark');
+  await act(async () => environment.change(true));
+  assert.equal(document.documentElement.dataset.theme, 'light');
+  assert.equal(window.localStorage.getItem(THEME_STORAGE_KEY), null, 'Following the system must not save an override');
+  await act(async () => Simulate.click(container.querySelector('[role="switch"]')));
+  await act(async () => environment.change(true));
+  assert.equal(document.documentElement.dataset.theme, 'dark', 'An explicit choice survives system changes');
+  await act(async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'light');
+    window.dispatchEvent(new window.StorageEvent('storage', { key: THEME_STORAGE_KEY, newValue: 'light' }));
+  });
+  assert.equal(document.documentElement.dataset.theme, 'light');
+});
+
+test('theme bootstrap paints the saved preference and still works when storage is blocked', () => {
+  const source = fs.readFileSync(path.join(frontendRoot, 'public/theme-init.js'), 'utf8');
+  for (const [saved, systemLight, expected] of [['dark', true, 'dark'], ['light', false, 'light'], ['invalid', true, 'light'], [null, false, 'dark']]) {
+    let selected;
+    vm.runInNewContext(source, {
+      window: { localStorage: { getItem: () => saved }, matchMedia: () => ({ matches: systemLight }) },
+      document: { documentElement: { setAttribute: (_, theme) => { selected = theme; } }, querySelector: () => null },
+    });
+    assert.equal(selected, expected);
+  }
+  let selected;
+  vm.runInNewContext(source, {
+    window: { get localStorage() { throw new Error('Storage is blocked'); }, matchMedia: () => ({ matches: true }) },
+    document: { documentElement: { setAttribute: (_, theme) => { selected = theme; } }, querySelector: () => null },
+  });
+  assert.equal(selected, 'light');
+});
+
+test('achievement filters preserve real milestone counts, show progress and allow keyboard flipping', async t => {
+  const analytics = { places: 3, likesReceived: 17, commentsReceived: 2, sharesReceived: 0, badges: [
+    { id: 'first-place', label: 'First Place', description: 'Shared your first place', earned: true },
+    { id: 'explorer', label: 'Explorer', description: 'Shared 5 places', earned: false },
+    { id: 'popular', label: 'Crowd Favorite', description: 'Received 10 likes', earned: true },
+  ] };
+  const Collection = () => React.createElement(AchievementCollection, { analytics });
+  const container = await mount(t, Collection);
+  assert.equal(container.querySelectorAll('.milestone-card').length, 3);
+  const fronts = [...container.querySelectorAll('.flip-card__face--front')];
+  assert.deepEqual(fronts.map(front => front.querySelector('img').getAttribute('alt')), ['Ace of spades', 'Ten of spades', 'Jack of spades']);
+  for (const front of fronts) {
+    assert.equal(front.textContent, '', 'Fronts show only the supplied playing-card artwork');
+    assert.equal(front.querySelector('h3, [role="progressbar"], .milestone-body, .milestone-stamp'), null);
+  }
+  assert.equal(container.querySelector('.achievement-summary [role="progressbar"]').getAttribute('aria-valuenow'), '2');
+  const explorer = container.querySelector('[aria-label="Explorer: places shared"]');
+  assert.equal(explorer.getAttribute('aria-valuenow'), '3');
+  assert.equal(explorer.getAttribute('aria-valuemax'), '5');
+  const popular = container.querySelector('[aria-label="Crowd Favorite: likes received"]');
+  assert.equal(popular.getAttribute('aria-valuenow'), '10', 'Progress is capped at its target');
+  const filter = label => [...container.querySelectorAll('.achievement-filters button')].find(button => button.textContent.startsWith(label));
+  await act(async () => Simulate.click(filter('Collected')));
+  assert.equal(container.querySelectorAll('.milestone-card').length, 2);
+  assert.equal(filter('Collected').getAttribute('aria-pressed'), 'true');
+  await act(async () => Simulate.click(filter('To discover')));
+  const card = container.querySelector('.milestone-card');
+  assert.equal(container.querySelectorAll('.milestone-card').length, 1);
+  assert.match(card.getAttribute('aria-label'), /Explorer/);
+  assert.equal(card.querySelector('img').getAttribute('alt'), 'Ten of spades', 'Filtering keeps each milestone assigned to the same card');
+  await act(async () => Simulate.keyDown(card, { key: 'Enter' }));
+  assert.equal(card.getAttribute('data-flipped'), 'true');
+  assert.equal(card.querySelector('.flip-card__face--back').getAttribute('aria-hidden'), 'false');
+  assert.match(card.querySelector('.flip-card__face--back').textContent, /Explorer.*Shared 5 places/);
+});
+
+test('achievement filters provide helpful empty states', async t => {
+  const Collection = () => React.createElement(AchievementCollection, { analytics: { places: 0, badges: [
+    { id: 'first-place', label: 'First Place', description: 'Shared your first place', earned: false },
+  ] } });
+  const container = await mount(t, Collection);
+  const filter = [...container.querySelectorAll('.achievement-filters button')].find(button => button.textContent.startsWith('Collected'));
+  await act(async () => Simulate.click(filter));
+  assert.equal(container.querySelectorAll('.milestone-card').length, 0);
+  assert.match(container.querySelector('.achievement-section__empty').textContent, /Share a moment/);
 });
 
 after(() => {

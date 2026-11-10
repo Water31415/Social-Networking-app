@@ -40,7 +40,7 @@
 }
 
 .backdrop--blurred {
-  background: rgba(5, 8, 6, 0.82);
+  background: var(--backdrop);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
@@ -88,7 +88,7 @@
   width: 2.75rem;
   height: 2.75rem;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text-primary);
   background: transparent;

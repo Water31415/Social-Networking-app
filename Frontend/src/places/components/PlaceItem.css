@@ -167,7 +167,7 @@
 }
 .place-item__like-button .pulse-heart__heart svg { width: 100%; height: 100%; }
 .place-item__engagement-button svg .map-pin__shape { fill: currentColor; stroke: none; }
-.place-item__engagement-button svg .map-pin__hole { fill: #0a0a0b; stroke: none; }
+.place-item__engagement-button svg .map-pin__hole { fill: var(--surface); stroke: none; }
 .place-item__engagement-button svg .map-pin__center { fill: currentColor; stroke: none; }
 .place-item__engagement-button:hover:not(:disabled) { color: var(--accent-hover); }
 .place-item__engagement-button.is-liked { color: var(--accent-hover); }

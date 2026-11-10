@@ -7,7 +7,7 @@ import Card from '../../shared/components/UIElements/Card'
 import ErrorModal from '../../shared/components/UIElements/ErrorModal'
 import { LoadingText, PlaceServiceBoard } from '../../shared/components/UI'
 import './Dashboard.css'
-import FlipCard from '../../shared/components/UI/Badges/FlipCard'
+import AchievementCollection from '../components/AchievementCollection'
 
 const getMonthStart = (date, offset = 0) => new Date(date.getFullYear(), date.getMonth() + offset, 1)
 const formatMonth = date => date.toLocaleDateString(undefined, { month: 'short' })
@@ -34,14 +34,6 @@ const METRICS=[
     {label:'Shares received',key:'sharesReceived',series:'shares'},
     {label:'Likes given',key:'likesGiven',series:'none'}
 ]
-
-const BADGE_META={
-    'first-place':{tone:'violet',mark:'M32 55S49 38 49 24a17 17 0 0 0-34 0c0 14 17 31 17 31Z M39 24a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'},
-    explorer:{tone:'blue',mark:'M32 7a25 25 0 1 0 0 50 25 25 0 0 0 0-50Z M42 22l-6 14-14 6 6-14 14-6Z M32 2v9 M32 53v9 M2 32h9 M53 32h9'},
-    popular:{tone:'pink',mark:'m32 7 7.5 15.2L56 24.6 44 36.3l2.8 16.5L32 45l-14.8 7.8L20 36.3 8 24.6l16.5-2.4L32 7Z'},
-    conversation:{tone:'cyan',mark:'M9 11h39v29H26L13 51V40H9V11Z M48 24h8v27h-7l-9 8V48H27v-8 M18 21h21 M18 29h15'},
-    connector:{tone:'amber',mark:'M23 31 42 18 M23 36l19 12 M55 14a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z M25 33a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z M55 51a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z'}
-}
 
 const Dashboard=()=>{
     const auth=useContext(AuthContext)
@@ -90,45 +82,6 @@ const Dashboard=()=>{
     }
     const chartMax = Math.max(4, ...monthlyPlaces.map(item => item.value))
 
-    const earnedBadgeCount = (analytics?.badges || []).filter(badge => badge.earned).length
-    const badges=(analytics?.badges || []).map((badge,index)=>{
-        const meta=BADGE_META[badge.id] || {tone:'violet'}
-
-        return <FlipCard
-            key={badge.id}
-            className={`achievement-flip-card achievement-flip-card--${meta.tone} ${badge.earned ? 'is-earned' : 'is-locked'}`}
-            front={<div className="achievement-face achievement-face--front">
-                <div className="achievement-face__topline"><span>NO. {String(index + 1).padStart(2,'0')}</span><span className="achievement-face__status">{badge.earned ? 'COLLECTED' : 'TO DISCOVER'}</span></div>
-                <img className="achievement-face__landscape" src={`${process.env.PUBLIC_URL}/images/landscape.png`} alt="" loading="lazy" />
-                <div className="achievement-face__mark"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d={meta.mark || BADGE_META['first-place'].mark} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-                <h3>{badge.label}</h3>
-                <p>{badge.earned ? 'A little proof of your journey.' : 'Your next chapter is waiting.'}</p>
-                <span className="achievement-face__flip-hint">View milestone <span aria-hidden="true">↗</span></span>
-            </div>}
-            back={<div className="achievement-face achievement-face--back">
-                <span className="achievement-face__eyebrow">MILESTONE DETAILS</span>
-                <h3>{badge.label}</h3>
-                <p>{badge.description}</p>
-                <div className={`achievement-face__result ${badge.earned ? 'is-earned' : ''}`}>
-                    {badge.earned ? 'In your collection. Keep exploring.' : 'Keep exploring to collect this milestone.'}
-                </div>
-                <span className="achievement-face__flip-hint">Tap to flip back</span>
-            </div>}
-            axis="y"
-            flipOnClick
-            glareOpacity={0}
-            hoverScale={1.015}
-            width={220}
-            height={270}
-            radius={4}
-            background="#131714"
-            color="#f0ece2"
-            shadowColor="#000000"
-            shadowOpacity={0}
-            ariaLabel={`${badge.label} achievement, ${badge.earned ? 'earned' : 'not yet earned'}. Flip for details.`}
-        />
-    })
-    
     return <main className="analytics-page">
         <ErrorModal error={error} onClear={clearError}/>
         <header className="analytics-header">
@@ -184,17 +137,7 @@ const Dashboard=()=>{
                     <PlaceServiceBoard places={places}/>
                 </div>
             </div>
-            <section className="achievement-section" aria-labelledby="achievements-heading">
-                <header className="achievement-section__header">
-                    <div>
-                        <p className="achievement-section__eyebrow">02 / SMALL THINGS, WELL EARNED</p>
-                        <h2 id="achievements-heading">The collection.</h2>
-                    </div>
-                    <span className="achievement-section__count">{earnedBadgeCount} / {(analytics.badges || []).length} collected</span>
-                </header>
-                <p className="achievement-section__hint">Places become memories. Moments become milestones. Turn a card to see its story.</p>
-                <div className="badge-grid">{badges}</div>
-            </section>
+            <AchievementCollection analytics={analytics} />
         </>}
     </main>
 }

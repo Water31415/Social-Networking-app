@@ -19,7 +19,7 @@
 .place-form > .button--inverse { margin-top: -.5rem; font-size: .78rem; }
 .place-form > .button[type="submit"] { display: flex; min-width: 10rem; margin: 1.8rem 0 0 auto; }
 .place-form > p[role="alert"],
-.place-location-error { display: block; margin: .7rem 0 0; color: #e4a294; font-size: .8rem; line-height: 1.65; }
+.place-location-error { display: block; margin: .7rem 0 0; color: var(--error); font-size: .8rem; line-height: 1.65; }
 @media (max-width: 480px) {
   .place-form { margin-top: .25rem; }
   .place-form > .button[type="submit"] { width: 100%; }

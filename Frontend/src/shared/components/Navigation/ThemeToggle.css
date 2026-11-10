@@ -1,0 +1,4 @@
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; flex-shrink: 0; min-width: 2.85rem; height: 2.85rem; padding: .55rem .8rem; border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); background: var(--surface); font-size: .75rem; line-height: 1; }
+.theme-toggle svg { width: 1.15rem; height: 1.15rem; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle:hover { border-color: var(--accent); background: var(--accent-soft); }
+@media (max-width: 940px) { .theme-toggle { width: 2.65rem; min-width: 2.65rem; height: 2.65rem; padding: .55rem; } .theme-toggle span { display: none; } }

@@ -32,11 +32,11 @@
 .form-control select:disabled { background: var(--surface-raised); color: var(--text-secondary); cursor: not-allowed; }
 .form-control > p { margin: .65rem 0 0; color: var(--text-secondary); font-size: .74rem; line-height: 1.6; }
 .form-control--invalid label,
-.form-control--invalid p { color: #e4a294; }
+.form-control--invalid p { color: var(--error); }
 .form-control--invalid input,
 .form-control--invalid textarea,
-.form-control--invalid select { border-color: #ab7568; }
+.form-control--invalid select { border-color: var(--error-border); }
 .form-control--invalid input:focus,
 .form-control--invalid textarea:focus,
-.form-control--invalid select:focus { border-color: #e4a294; box-shadow: 0 0 0 3px rgba(228, 162, 148, .1); }
+.form-control--invalid select:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(228, 162, 148, .1); }
 @media (prefers-reduced-motion: reduce) { .form-control input, .form-control textarea, .form-control select { transition: none; } }

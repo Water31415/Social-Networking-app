@@ -11,7 +11,7 @@ const format = value => new Intl.NumberFormat().format(value)
 const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 const PulseHeart = ({ liked = false, count = 0, onChange, disabled = false, size = 24,
-  likedColor = '#ff4d6d', idleColor = '#aab4c0', pillColor = 'transparent', textColor = '#e6edf3',
+  likedColor = '#ff4d6d', idleColor = 'var(--text-secondary, #aab4c0)', pillColor = 'transparent', textColor = 'var(--text-primary, #e6edf3)',
   duration = 560, dotSize = 0.3, overshoot = 1.7, beat = 3, rollDuration = 350,
   label = 'Like', title, className = '' }) => {
   const rootRef = useRef(null)

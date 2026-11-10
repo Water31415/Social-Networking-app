@@ -12,8 +12,8 @@
 .places-page__filters button.is-active { border-color: var(--border); color: var(--text-primary); background: var(--surface-raised); }
 .places-page__filters button:hover:not(:disabled) { color: var(--accent); }
 .places-page__filters svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.places-page__active-trip { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.55rem; padding: .5rem .8rem; border: 1px solid rgba(206,229,155,.4); border-radius: 6px; color: var(--signal, #cee59b); background: rgba(206,229,155,.07); font-size: .76rem; font-weight: 550; text-decoration: none; }
-.places-page__active-trip:hover { border-color: var(--signal, #cee59b); background: rgba(206,229,155,.13); }
+.places-page__active-trip { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.55rem; padding: .5rem .8rem; border: 1px solid var(--signal-border); border-radius: 6px; color: var(--signal, #cee59b); background: var(--signal-soft); font-size: .76rem; font-weight: 550; text-decoration: none; }
+.places-page__active-trip:hover { border-color: var(--signal, #cee59b); background: var(--signal-soft); }
 .places-page__active-trip:focus-visible { outline: 2px solid var(--signal, #cee59b); outline-offset: 3px; }
 .places-page__active-trip svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .places-page__collection-note { margin-left: auto; color: var(--text-secondary); font-family: var(--font-mono); font-size: .6rem; letter-spacing: .025em; text-transform: uppercase; }
@@ -23,6 +23,6 @@
 .places-page--with-create .places-page__intro { padding-top: .5rem; }
 .places-page--with-create .places-page__intro h1 { font-size: clamp(1.8rem, 2.5vw, 2.4rem); }
 .places-page--with-create .places-page__intro-note { display: none; }
-.places-location-error { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 2px solid #ed9b9d; color: #edb2b0; background: rgba(237,155,157,.06); font-size: .85rem; }
+.places-location-error { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 2px solid var(--error); color: var(--error); background: rgba(237,155,157,.06); font-size: .85rem; }
 @media (max-width: 900px) { .places-page--with-create { grid-template-columns: minmax(0, 1fr); } .places-page__create { position: static; } .add-place-options { min-height: 0; } }
 @media (max-width: 640px) { .places-page__intro { display: block; padding-top: .75rem; padding-bottom: .75rem; } .places-page__eyebrow { margin-bottom: .65rem; font-size: .58rem; } .places-page__intro h1 { max-width: 26ch; font-size: clamp(1.7rem, 6vw, 2.1rem); } .places-page__intro-note { max-width: none; margin-top: .5rem; padding-left: 0; border: 0; font-size: .78rem; } .places-page__intro-note br { display: none; } .places-page__collection-note { margin-left: auto; display: none; } .places-page__toolbar { margin-bottom: 1rem; padding: .6rem 0; } }

@@ -5,7 +5,7 @@
   border-radius: var(--fc-radius); outline: none; cursor: pointer; user-select: none; touch-action: pan-y;
   -webkit-tap-highlight-color: transparent; perspective: 1100px; transform: scale(var(--fc-scale)); transition: transform .25s ease;
 }
-.flip-card:focus-visible { outline: 2px solid #c084fc; outline-offset: 4px; }
+.flip-card:focus-visible { outline: 2px solid var(--focus-ring, #c084fc); outline-offset: 4px; }
 .flip-card[data-disabled] { cursor: default; opacity: .6; }
 .flip-card__shadow { position: absolute; inset: 12% 9% -5%; border-radius: var(--fc-radius); background: color-mix(in srgb, var(--fc-shadow) calc(var(--fc-shadow-o) * 100%), transparent); filter: blur(22px); pointer-events: none; }
 .flip-card__rotor { position: absolute; inset: 0; display: block; transform-style: preserve-3d; transition: transform .65s cubic-bezier(.2,.75,.25,1); transform: rotateX(var(--fc-tilt-x)) rotateY(var(--fc-tilt-y)); }

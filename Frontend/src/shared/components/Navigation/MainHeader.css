@@ -16,6 +16,5 @@ main { margin-top: 0; }
   .main-header { width: calc(100% - 5.5rem); margin-left: 5.5rem; }
 }
 @media (max-width: 640px) {
-  .main-header { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 2.75rem; gap: .55rem .7rem; min-height: 4.75rem; padding: .65rem 1rem .85rem; }
-  .main-header--signed-in { grid-template-columns: 2.5rem minmax(0, 1fr); }
+  .main-header { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: .55rem .7rem; min-height: 4.75rem; padding: .65rem 1rem .85rem; }
 }

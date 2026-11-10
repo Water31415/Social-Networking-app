@@ -9,7 +9,7 @@
   border: 1px solid var(--accent);
   border-radius: var(--radius-control);
   background: var(--accent);
-  color: var(--app-background);
+  color: var(--on-accent);
   font: inherit;
   font-size: .85rem;
   font-weight: 650;
@@ -22,14 +22,14 @@
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 .button:hover:not(:disabled),
-.button:active:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--app-background); }
+.button:active:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
 .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .button--inverse { border-color: var(--border); background: transparent; color: var(--text-primary); }
 .button--inverse:hover:not(:disabled),
 .button--inverse:active:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-hover); }
-.button--danger { border-color: #775047; background: transparent; color: #e4a294; }
+.button--danger { border-color: var(--error-border); background: transparent; color: var(--error); }
 .button--danger:hover:not(:disabled),
-.button--danger:active:not(:disabled) { border-color: #e4a294; background: #35231e; color: #f0c4b9; }
+.button--danger:active:not(:disabled) { border-color: var(--error); background: var(--error-surface); color: var(--error); }
 .button:disabled,
 .button:hover:disabled,
 .button:active:disabled { border-color: var(--border); background: var(--surface-raised); color: var(--text-secondary); cursor: not-allowed; opacity: .6; box-shadow: none; transform: none; }

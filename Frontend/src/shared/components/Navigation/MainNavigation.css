@@ -37,13 +37,15 @@
 .main-navigation__search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .main-navigation__search > svg { flex: 0 0 1.1rem; width: 1.1rem; height: 1.1rem; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; }
 .main-navigation__search input { width: 100%; min-width: 0; padding: .65rem 0; border: 0; outline: 0; background: transparent; color: var(--text-primary); font-size: .85rem; }
-.main-navigation__search input::placeholder { color: #818b80; }
+.main-navigation__search input::placeholder { color: var(--text-secondary); }
 .main-navigation__search input::-webkit-search-cancel-button { display: none; }
 .main-navigation__search > button { display: grid; flex: 0 0 1.75rem; width: 1.75rem; height: 1.75rem; place-items: center; border: 0; border-radius: 4px; color: var(--text-primary); background: var(--surface-raised); font-size: 1.2rem; }
 .main-navigation__join { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: .5rem; min-height: 2.85rem; padding: .55rem 1rem; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); background: transparent; font-size: .82rem; font-weight: 600; text-decoration: none; transition: background-color 150ms ease; }
 .main-navigation__join svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .main-navigation__join:hover { background: var(--accent-soft); }
 .main-navigation__drawer-nav { height: 100%; }
+.main-navigation__actions { display: flex; flex-shrink: 0; align-items: center; gap: .6rem; margin-left: auto; }
+.main-navigation__search + .main-navigation__actions { margin-left: 0; }
 .main-navigation__icon-sidebar { display: none; }
 @media (min-width: 1200px) {
   .main-navigation__menu-btn { display: none; }
@@ -58,6 +60,7 @@
 @media (max-width: 640px) {
   .main-navigation__menu-btn { width: 2.5rem; height: 2.5rem; }
   .main-navigation__title { grid-column: 2; grid-row: 1; }
+  .main-navigation__actions { grid-column: 3; grid-row: 1; gap: .35rem; margin-left: 0; }
   .main-navigation__title a { font-size: 2.3rem; }
   .main-navigation__edition { margin-top: .2rem; font-size: .49rem; }
   .main-navigation__search { grid-column: 1 / -1; grid-row: 2; width: 100%; min-width: 0; min-height: 2.65rem; margin: .25rem 0 0; }
