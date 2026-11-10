@@ -3,6 +3,7 @@ import { Link, useHistory } from 'react-router-dom'
 import { AuthContext } from '../../context/auth-context'
 import { useTrip } from '../../context/trip-context'
 import { backendUrl } from '../../../Utils/backend-url'
+import { notifySessionRejected } from '../../../Utils/session'
 import SpecularButton from '../SpecularButton/SpecularButton'
 import './TripBanner.css'
 
@@ -19,6 +20,7 @@ const TripBanner = () => {
     try {
       const response = await fetch(backendUrl(`api/trips/${tripId}/stop`), { method: 'PATCH', headers: { Authorization: `Bearer ${auth.token}` } })
       const data = await response.json()
+      notifySessionRejected(response, { Authorization: `Bearer ${auth.token}` }, data)
       if (!response.ok) throw new Error(data.message || 'Could not stop trip')
       setActiveTrip(null); history.push(`/trips/${tripId}/review`)
     } catch (requestError) { setError(requestError.message) }

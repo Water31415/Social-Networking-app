@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const Module = require('node:module');
+const vm = require('node:vm');
 const { test, after } = require('node:test');
 
 const projectRoot = path.resolve(__dirname, '..', '..');
@@ -115,6 +116,9 @@ Module._load = function (request, parent, isMain) {
 const { MemoryRouter } = frontendRequire('react-router-dom');
 const { AuthContext } = require(path.join(sourceRoot, 'shared/components/context/auth-context.js'));
 const { PlaceSearchContext } = require(path.join(sourceRoot, 'shared/components/context/place-search-context.js'));
+const TripContext = require(path.join(sourceRoot, 'shared/components/context/trip-context.js')).default;
+const ActiveTripLink = require(path.join(sourceRoot, 'trips/components/ActiveTripLink.js')).default;
+const { getSessionExpiration, notifySessionRejected } = require(path.join(sourceRoot, 'shared/Utils/session.js'));
 const NewPlace = require(path.join(sourceRoot, 'places/pages/NewPlaces.js')).default;
 const UpdatePlace = require(path.join(sourceRoot, 'places/pages/UpdatePlace.js')).default;
 const PlaceList = require(path.join(sourceRoot, 'places/components/PlaceList.js')).default;
@@ -249,6 +253,134 @@ test('an unknown or malformed shared anchor leaves the gallery usable', async t 
   const container = await mount(t, SharedPlaces, '/user1/places#place-%zz');
   assert.equal(Boolean(container.querySelector('[role="dialog"]')), false);
   assert.ok(container.querySelector('[data-test-tile="place-place1"]'));
+});
+
+test('the trip shortcut appears only for a signed-in active trip and opens that trip', async t => {
+  let setTrip;
+  let setSignedIn;
+  const Shortcut = () => {
+    const [activeTrip, updateTrip] = React.useState(null);
+    const [isLoggedIn, updateSignedIn] = React.useState(true);
+    setTrip = updateTrip;
+    setSignedIn = updateSignedIn;
+    return React.createElement(AuthContext.Provider, { value: { ...auth, isLoggedIn } },
+      React.createElement(TripContext.Provider, { value: { activeTrip, isLoading: false } },
+        React.createElement(ActiveTripLink)));
+  };
+  const container = await mount(t, Shortcut);
+  assert.equal(container.querySelector('a'), null);
+  for (const status of ['draft', 'completed', 'published']) {
+    await act(async () => setTrip({ id: 'trip1', status }));
+    assert.equal(container.querySelector('a'), null, `${status} must not show the shortcut`);
+  }
+  await act(async () => setTrip({ _id: 'trip1', status: 'active' }));
+  assert.equal(container.querySelector('a').getAttribute('href'), '/trips/trip1');
+  assert.match(container.textContent, /Trip in progress/);
+  await act(async () => setSignedIn(false));
+  assert.equal(container.querySelector('a'), null);
+  await act(async () => { setSignedIn(true); setTrip(null); });
+  assert.equal(container.querySelector('a'), null, 'Stopping the trip hides the shortcut');
+});
+
+const sessionToken = expires => `header.${Buffer.from(JSON.stringify({ exp: expires })).toString('base64url')}.signature`;
+
+test('session expiry follows the JWT, cannot be extended by storage, and rejects corrupt tokens', () => {
+  const expires = Math.floor(Date.now() / 1000) + 120;
+  const token = sessionToken(expires);
+  assert.equal(getSessionExpiration(token).getTime(), expires * 1000);
+  assert.equal(getSessionExpiration(token, new Date((expires + 3600) * 1000)).getTime(), expires * 1000);
+  assert.equal(getSessionExpiration(token, new Date((expires - 60) * 1000)).getTime(), (expires - 60) * 1000);
+  for (const value of [null, 'bad', 'x.e30.x']) assert.equal(getSessionExpiration(value), null);
+  assert.equal(getSessionExpiration(token, 'bad date'), null);
+});
+
+test('only authenticated session rejections trigger expiry; failed login and permission errors do not', () => {
+  let expirations = 0;
+  const listener = () => { expirations++; };
+  window.addEventListener('snapit:session-expired', listener);
+  try {
+    notifySessionRejected({ status: 401 });
+    notifySessionRejected({ status: 403 }, { Authorization: 'Bearer null' }, { message: 'Authentication failed' });
+    notifySessionRejected({ status: 403 }, { Authorization: 'Bearer token' }, { message: 'Not your place' });
+    assert.equal(expirations, 0);
+    notifySessionRejected({ status: 403 }, { Authorization: 'Bearer token' }, { message: 'Authentication failed' });
+    notifySessionRejected({ status: 401 }, { Authorization: 'Bearer token' });
+    assert.equal(expirations, 2);
+  } finally { window.removeEventListener('snapit:session-expired', listener); }
+});
+
+async function mountSession(t, saved) {
+  window.localStorage.clear();
+  if (saved !== undefined) window.localStorage.setItem('userData', typeof saved === 'string' ? saved : JSON.stringify(saved));
+  const timers = new Map();
+  const navigations = [];
+  let timerId = 0;
+  const sessionWindow = {
+    localStorage: window.localStorage,
+    location: { replace: destination => navigations.push(destination) },
+    setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, delay }); return id; },
+    clearTimeout: id => timers.delete(id),
+    addEventListener: window.addEventListener.bind(window),
+    removeEventListener: window.removeEventListener.bind(window),
+  };
+  const filename = path.join(sourceRoot, 'shared/hooks/auth-hook.js');
+  const compiled = babel.transformSync(fs.readFileSync(filename, 'utf8'), {
+    configFile: false, babelrc: false,
+    presets: [[frontendRequire.resolve('@babel/preset-env'), { targets: { node: 'current' } }]]
+  }).code;
+  const module = { exports: {} };
+  vm.runInNewContext(compiled, {
+    module, exports: module.exports, window: sessionWindow, document, Date,
+    require: name => name === 'react' ? React : { getSessionExpiration },
+  }, { filename });
+  let session;
+  const Probe = () => { session = module.exports.CheckAuth(); return null; };
+  await mount(t, Probe);
+  t.after(() => window.localStorage.clear());
+  return { timers, navigations, get session() { return session; } };
+}
+
+test('an open session expires once, clears credentials and fully navigates to All places', async t => {
+  const expires = Math.floor(Date.now() / 1000) + 120;
+  const saved = { userId: 'user1', token: sessionToken(expires), expirationDate: new Date((expires + 3600) * 1000).toISOString() };
+  const harness = await mountSession(t, saved);
+  assert.equal(harness.session.token, saved.token);
+  assert.equal(harness.session.isAuthReady, true);
+  assert.equal(harness.timers.size, 1);
+  const timer = [...harness.timers.values()][0];
+  assert.ok(timer.delay > 0 && timer.delay <= 120000, 'Restoring must not restart a full-hour timer');
+  await act(async () => { timer.callback(); timer.callback(); });
+  assert.equal(harness.session.token, null);
+  assert.equal(window.localStorage.getItem('userData'), null);
+  assert.deepEqual(harness.navigations, ['/']);
+  assert.equal(harness.timers.size, 0);
+});
+
+test('expired and corrupt stored sessions reload All places without restoring authentication', async t => {
+  for (const saved of [
+    { userId: 'user1', token: sessionToken(Math.floor(Date.now() / 1000) - 1), expirationDate: new Date(Date.now() + 3600000).toISOString() },
+    '{broken json',
+  ]) {
+    const harness = await mountSession(t, saved);
+    assert.equal(harness.session.token, null);
+    assert.equal(window.localStorage.getItem('userData'), null);
+    assert.deepEqual(harness.navigations, ['/']);
+  }
+});
+
+test('a backend session rejection redirects once and manual logout cancels the expiry timer', async t => {
+  const saved = { userId: 'user1', token: sessionToken(Math.floor(Date.now() / 1000) + 120) };
+  const harness = await mountSession(t, saved);
+  await act(async () => {
+    window.dispatchEvent(new window.Event('snapit:session-expired'));
+    window.dispatchEvent(new window.Event('snapit:session-expired'));
+  });
+  assert.deepEqual(harness.navigations, ['/']);
+  assert.equal(harness.session.token, null);
+  const manual = await mountSession(t, saved);
+  await act(async () => manual.session.logout());
+  assert.equal(manual.timers.size, 0);
+  assert.deepEqual(manual.navigations, [], 'Manual logout does not run a later expiry reload');
 });
 
 after(() => {

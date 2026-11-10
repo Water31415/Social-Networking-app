@@ -99,6 +99,7 @@ const Dashboard=()=>{
             className={`achievement-flip-card achievement-flip-card--${meta.tone} ${badge.earned ? 'is-earned' : 'is-locked'}`}
             front={<div className="achievement-face achievement-face--front">
                 <div className="achievement-face__topline"><span>NO. {String(index + 1).padStart(2,'0')}</span><span className="achievement-face__status">{badge.earned ? 'COLLECTED' : 'TO DISCOVER'}</span></div>
+                <img className="achievement-face__landscape" src={`${process.env.PUBLIC_URL}/images/landscape.png`} alt="" loading="lazy" />
                 <div className="achievement-face__mark"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d={meta.mark || BADGE_META['first-place'].mark} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                 <h3>{badge.label}</h3>
                 <p>{badge.earned ? 'A little proof of your journey.' : 'Your next chapter is waiting.'}</p>

@@ -1,44 +1,72 @@
-import {useEffect,useState,useCallback} from 'react'
-let logoutTimer
-export const CheckAuth=()=>{
-     const [userId,setUserId]=useState(false)
-  const[tokenExpirationDate,setTokenExpirationDate]=useState()
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { getSessionExpiration } from '../Utils/session'
 
-  const[token,setToken]=useState(false)
+export const CheckAuth = () => {
+  const [userId, setUserId] = useState(null)
+  const [token, setToken] = useState(null)
+  const [tokenExpirationDate, setTokenExpirationDate] = useState(null)
+  const [isAuthReady, setIsAuthReady] = useState(false)
+  const expiryHandled = useRef(false)
 
+  const logout = useCallback(() => {
+    setToken(null)
+    setTokenExpirationDate(null)
+    setUserId(null)
+    window.localStorage.removeItem('userData')
+  }, [])
 
-const login=useCallback((uid,token,expirationDate)=>{
-  setToken(token)
-  setUserId(uid)
-  const tokenExpiration= expirationDate||new Date(new Date().getTime() + 1000*60*60)
-  setTokenExpirationDate(tokenExpiration)
-  localStorage.setItem('userData',JSON.stringify({userId:uid , token :token,expirationDate:tokenExpiration.toISOString()}))
-},[])
+  const expireSession = useCallback(() => {
+    if (expiryHandled.current) return
+    expiryHandled.current = true
+    logout()
+    // Full navigation discards private page state and reloads All places.
+    window.location.replace('/')
+  }, [logout])
 
-const logout=useCallback(()=>{
-  setToken(null)
-  setTokenExpirationDate(null)
-  setUserId(null)
-  localStorage.removeItem('userData')
-  console.log("logout");
-  
-},[])
+  const login = useCallback((uid, nextToken, expirationDate) => {
+    const expires = getSessionExpiration(nextToken, expirationDate)
+    if (!uid || !expires || expires.getTime() <= Date.now()) {
+      expireSession()
+      return
+    }
+    expiryHandled.current = false
+    setToken(nextToken)
+    setUserId(uid)
+    setTokenExpirationDate(expires)
+    window.localStorage.setItem('userData', JSON.stringify({
+      userId: uid, token: nextToken, expirationDate: expires.toISOString()
+    }))
+  }, [expireSession])
 
-useEffect(()=>{
-  if(token && tokenExpirationDate){
-    const remainingTime = tokenExpirationDate.getTime()- new Date().getTime()
-    logoutTimer=setTimeout(logout,remainingTime)
-  }
-  else{
-    clearTimeout(logoutTimer)
-  }
-},[token,logout,tokenExpirationDate])
-useEffect(()=>{
-  const storedData = JSON.parse(localStorage.getItem('userData'))
-  if(storedData && storedData.token && new Date(storedData.expirationDate)> new Date()){
-    login(storedData.userId,storedData.token, new Date(storedData.expirationDate))
-  }
-},[login])
+  useEffect(() => {
+    if (!token || !tokenExpirationDate) return undefined
+    const checkExpiration = () => {
+      if (tokenExpirationDate.getTime() <= Date.now()) expireSession()
+    }
+    const timer = window.setTimeout(expireSession, Math.max(0, tokenExpirationDate.getTime() - Date.now()))
+    window.addEventListener('focus', checkExpiration)
+    document.addEventListener('visibilitychange', checkExpiration)
+    window.addEventListener('snapit:session-expired', expireSession)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('focus', checkExpiration)
+      document.removeEventListener('visibilitychange', checkExpiration)
+      window.removeEventListener('snapit:session-expired', expireSession)
+    }
+  }, [token, tokenExpirationDate, expireSession])
 
-return {token,login,logout,userId}
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('userData')
+      if (!saved) return
+      const stored = JSON.parse(saved)
+      login(stored?.userId, stored?.token, stored?.expirationDate)
+    } catch {
+      expireSession()
+    } finally {
+      setIsAuthReady(true)
+    }
+  }, [login, expireSession])
+
+  return { token, login, logout, userId, isAuthReady }
 }

@@ -8,6 +8,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import AddPlaceOptions from '../../shared/components/UI/AddPlaceOptions/AddPlaceOptions';
 import { LoadingText } from '../../shared/components/UI';
 import './places.css';
+import ActiveTripLink from '../../trips/components/ActiveTripLink';
 
 const Places = () => {
   const auth = useContext(AuthContext);
@@ -118,6 +119,7 @@ const Places = () => {
             <button type="button" className={!nearbyPlaces ? 'is-active' : ''} aria-pressed={!nearbyPlaces} onClick={() => { if (nearbyPlaces) findNearbyPlaces(); }}>All places</button>
             <button type="button" className={nearbyPlaces ? 'is-active' : ''} aria-pressed={Boolean(nearbyPlaces)} disabled={isLoading} onClick={() => { if (!auth.isLoggedIn) history.push('/auth'); else if (!nearbyPlaces) findNearbyPlaces(); }}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" /></svg>Near you</button>
           </div>
+          <ActiveTripLink />
           <span className="places-page__collection-note">{nearbyPlaces ? 'Within 100 km of you' : 'Collected by the community'}<span aria-hidden="true"> ↗</span></span>
         </div>
         <ErrorModal error={error} onClear={clearError} />

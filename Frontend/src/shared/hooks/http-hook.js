@@ -1,4 +1,5 @@
 import {useEffect,useState,useCallback,useRef} from 'react'
+import { notifySessionRejected } from '../Utils/session'
 
 export const useHttpClient = ()=>{
     const [isLoading,setIsLoading]=useState(false)
@@ -19,6 +20,7 @@ export const useHttpClient = ()=>{
                 signal : httpAbortCtrl.signal
             })
              const responseData = await response.json()
+             notifySessionRejected(response, headers, responseData)
              activeHttpRequest.current= activeHttpRequest.current.filter(reqCtrl=>reqCtrl !==httpAbortCtrl)
                         if (!response.ok) {
                             throw new Error(responseData.message)

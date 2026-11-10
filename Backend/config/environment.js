@@ -20,9 +20,19 @@ const getJwtSecret = () => {
   return process.env.JWT_API_KEY
 }
 
+const getJwtLifetimeSeconds = () => {
+  // Keep local sessions short while expiry behavior is being tested.
+  const seconds = Number(process.env.JWT_TTL_SECONDS || (process.env.NODE_ENV === 'production' ? 3600 : 120))
+  if (!Number.isSafeInteger(seconds) || seconds < 1 || seconds > 604800) {
+    throw new Error('JWT_TTL_SECONDS must be a whole number between 1 and 604800')
+  }
+  return seconds
+}
+
 const validateStartupEnvironment = () => {
   const missing = ['DATABASE_API_KEY', 'JWT_API_KEY'].filter(name => !isConfigured(name))
   if (missing.length) throw new Error(`Missing required backend configuration: ${missing.join(', ')}`)
+  getJwtLifetimeSeconds()
 }
 
 const applyDatabaseDns = () => {
@@ -35,4 +45,4 @@ const applyDatabaseDns = () => {
   dns.setServers(servers)
 }
 
-module.exports = { loadEnvironment, getJwtSecret, validateStartupEnvironment, applyDatabaseDns }
+module.exports = { loadEnvironment, getJwtSecret, getJwtLifetimeSeconds, validateStartupEnvironment, applyDatabaseDns }

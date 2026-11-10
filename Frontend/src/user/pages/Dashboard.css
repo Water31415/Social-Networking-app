@@ -1,10 +1,10 @@
-.analytics-page { width: min(100%, 1440px); margin: 0 auto; padding: clamp(1.25rem, 3vw, 2.5rem) var(--content-gutter, 1.5rem) 5rem; color: var(--text-primary, #f0ece2); }
+.analytics-page { width: min(100%, 1440px); margin: 0 auto; padding: 1rem var(--content-gutter, 1.5rem) 5rem; color: var(--text-primary, #f0ece2); }
 .analytics-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
 .analytics-header__intro { max-width: 47rem; }
 .analytics-header__eyebrow,.analytics-chart__eyebrow,.achievement-section__eyebrow { display: block; margin: 0 0 1rem; color: var(--accent, #c5a2fa); font-family: var(--font-mono, Consolas, monospace); font-size: .66rem; font-weight: 400; letter-spacing: .13em; line-height: 1.6; }
-.analytics-header h1 { margin: 0; font-family: var(--font-display, Georgia, 'Times New Roman', serif); font-size: clamp(2rem, 3.2vw, 3rem); font-weight: 400; line-height: 1.08; letter-spacing: -.045em; }
-.analytics-header__intro p { max-width: 36rem; margin: .65rem 0 0; color: var(--text-secondary, #a6aca3); font-size: .9rem; line-height: 1.75; }
-.analytics-header__tools { display: grid; justify-items: end; flex-shrink: 0; gap: 1.35rem; }
+.analytics-header h1 { margin: 0; font-family: var(--font-display, Georgia, 'Times New Roman', serif); font-size: clamp(1.8rem, 2.6vw, 2.4rem); font-weight: 400; line-height: 1.08; letter-spacing: -.045em; }
+.analytics-header__intro p { max-width: 36rem; margin: .4rem 0 0; color: var(--text-secondary, #a6aca3); font-size: .9rem; line-height: 1.75; }
+.analytics-header__tools { display: grid; justify-items: end; flex-shrink: 0; gap: .75rem; }
 .analytics-header__journal-link { display: flex; align-items: center; gap: 1.25rem; padding-bottom: .4rem; border-bottom: 1px solid var(--accent, #c5a2fa); color: var(--text-primary, #f0ece2); font-size: .8rem; text-decoration: none; }
 .analytics-header__journal-link span { color: var(--accent, #c5a2fa); font-size: 1.2rem; }
 .analytics-range { display: flex; align-items: center; gap: .75rem; }
@@ -86,6 +86,13 @@
 .achievement-flip-card.is-earned .flip-card__face { border-color: rgba(197, 162, 250, .4); }
 .achievement-flip-card .flip-card__shadow,.achievement-flip-card .flip-card__glare { display: none; }
 .achievement-face { display: flex; flex-direction: column; align-items: stretch; width: 100%; height: 100%; padding: 1rem; color: var(--text-primary); background: var(--surface, #131714); }
+.achievement-face--front { position: relative; isolation: isolate; color: #fff7e8; background: #332517; }
+.achievement-face--front::after { position: absolute; z-index: -1; inset: 0; background: linear-gradient(180deg, rgba(14,18,13,.6), rgba(14,18,13,.12) 40%, rgba(14,18,13,.92)); content: ''; }
+.achievement-face--front .achievement-face__landscape { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 55%; }
+.achievement-face--front .achievement-face__topline,.achievement-face--front p,.achievement-face--front .achievement-face__flip-hint { color: #f0e5d0; }
+.achievement-face--front .achievement-face__flip-hint { border-color: rgba(255,247,232,.3); }
+.is-locked .achievement-face__landscape { filter: saturate(.5) brightness(.85); }
+.analytics-header__eyebrow { margin-bottom: .5rem; }
 .achievement-face__topline { display: flex; align-items: center; justify-content: space-between; gap: .25rem; color: var(--text-secondary); font-family: var(--font-mono, Consolas, monospace); font-size: .58rem; letter-spacing: .03em; }
 .achievement-face__status { color: var(--text-secondary); }
 .is-earned .achievement-face__status { color: #cee59b; }
@@ -127,9 +134,9 @@
   .badge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
-  .analytics-page { padding-top: 2rem; }
-  .analytics-header { gap: 1.5rem; margin-bottom: 1.75rem; }
-  .analytics-header h1 { max-width: 18rem; font-size: 2.1rem; }
+  .analytics-page { padding-top: .75rem; }
+  .analytics-header { gap: 1rem; margin-bottom: 1rem; }
+  .analytics-header h1 { max-width: 22rem; font-size: 1.85rem; }
   .analytics-header__intro p { font-size: .8rem; }
   .analytics-header__tools { align-items: flex-start; flex-direction: column; gap: 1rem; }
   .analytics-range { justify-content: space-between; width: 100%; }

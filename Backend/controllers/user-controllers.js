@@ -3,7 +3,7 @@ const User = require("../models/user")
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { getJwtSecret } = require('../config/environment')
+const { getJwtSecret, getJwtLifetimeSeconds } = require('../config/environment')
 
 
 
@@ -89,7 +89,7 @@ const signUp = async(req,res,next)=>{
   let token
   try {
     token = jwt.sign(
-      {userId : createdUser.id , email : createdUser.email},jwtSecret,{expiresIn :'1h',algorithm:'HS256'})
+      {userId : createdUser.id , email : createdUser.email},jwtSecret,{expiresIn: getJwtLifetimeSeconds(),algorithm:'HS256'})
   } catch (error) {
     return next(new HttpError("creating user failed , try again",500))
   }
@@ -135,7 +135,7 @@ const login =async(req,res,next)=>{
   try {
     token = jwt.sign({
       userId:identifiedUser.id, email :identifiedUser.email
-    },jwtSecret,{expiresIn:'1h',algorithm:'HS256'})
+    },jwtSecret,{expiresIn: getJwtLifetimeSeconds(),algorithm:'HS256'})
   } catch (error) {
      return next(new HttpError("creating user failed , try again",500))
   }

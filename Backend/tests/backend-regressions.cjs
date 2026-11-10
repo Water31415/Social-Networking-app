@@ -197,6 +197,8 @@ test('login signs a verifiable token with the configured secret', async () => {
     json: value => { response = value; },
   }, error => { throw error; });
   assert.equal(jwt.verify(response.token, 'login-test-secret').userId, 'existing-user');
+  const claims = jwt.decode(response.token);
+  assert.equal(claims.exp - claims.iat, 120, 'Development sessions last two minutes');
 });
 
 test('signup signs a verifiable token with the configured secret', async () => {
@@ -213,6 +215,27 @@ test('signup signs a verifiable token with the configured secret', async () => {
   }, res, error => { throw error; });
   assert.equal(status, 201);
   assert.equal(jwt.verify(response.token, 'signup-test-secret').userId, 'new-user');
+  const claims = jwt.decode(response.token);
+  assert.equal(claims.exp - claims.iat, 120, 'Signup uses the same short session lifetime');
+});
+
+test('session lifetime is configurable and production defaults to one hour', () => {
+  assert.equal(environmentHarness({ NODE_ENV: 'production' }).getJwtLifetimeSeconds(), 3600);
+  assert.equal(environmentHarness({ JWT_TTL_SECONDS: '15' }).getJwtLifetimeSeconds(), 15);
+  for (const value of ['0', '-1', '1.5', 'abc', '604801']) {
+    assert.throws(() => environmentHarness({ JWT_TTL_SECONDS: value }).getJwtLifetimeSeconds(), /JWT_TTL_SECONDS/);
+  }
+});
+
+test('the backend rejects an expired token with the authentication failure response', () => {
+  const auth = authenticationHarness({ JWT_API_KEY: 'expiry-test-secret' });
+  const token = jwt.sign({ userId: 'test-user' }, 'expiry-test-secret', { expiresIn: -1 });
+  let error;
+  const req = { method: 'GET', headers: { authorization: `Bearer ${token}` } };
+  auth(req, {}, value => { error = value; });
+  assert.equal(error.code, 403);
+  assert.equal(error.message, 'Authentication failed');
+  assert.equal(req.userData, undefined);
 });
 
 test('importing the app opens neither database connections nor listening sockets', () => {

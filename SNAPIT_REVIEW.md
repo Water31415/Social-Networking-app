@@ -60,7 +60,7 @@ This changes DNS resolution only inside the Node backend process. It does not ch
 
 | Command / check | Result |
 | --- | --- |
-| `npm test` | 52/52 pass: backend 16, frontend 8, trip 28 |
+| `npm test` | 60/60 pass: backend 18, frontend 14, trip 28 |
 | `npm run test:api` | 26/26 isolated HTTP checks pass; database/provider effects mocked |
 | `npm run test:database` | Live MongoDB connectivity and unique active-trip index pass |
 | `npm run test:live` | 5/5 pass: actual startup/index initialization and GET requests for users, places, auth rejection, and unknown route |
@@ -94,3 +94,22 @@ npm run start:frontend
 ## Remaining external configuration
 
 `GOOGLE_TRANSLATE_API_KEY` is still absent. Translation therefore returns its deliberate configuration-unavailable response. Enabling real Google translation requires a valid key in `Backend/.env`; no key was invented, borrowed from another service, or exposed in test output.
+
+
+## Compact pages, trip shortcut, and session-expiry update
+
+- Reduced intro heading sizes, top/bottom padding, and supporting-copy spacing on All places, personal journals, nearby places, place forms, dashboard, authentication, and trip pages. Desktop and mobile rules are both smaller.
+- Confirmed Nearby is absent from the icon sidebar and New entry is absent from the main header. New entry remains available in the sidebar/mobile navigation.
+- Removed the CSS-generated serial number from each post thumbnail.
+- Achievement card fronts now show the existing `Frontend/public/images/landscape.png` scenery, with an overlay for legible labels. Card flipping and milestone details remain available.
+- Added a clickable Trip in progress shortcut to the All places toolbar. It is rendered only for a signed-in user's trip with status `active`, and routes directly to that trip. Draft, completed, published, missing, and loading trips do not show it. Active-trip data also refreshes when returning to the tab.
+- Session expiry follows the JWT's actual `exp` claim. Expiry clears the saved credentials and fully reloads `/` (All places), including from private routes or after restoring an expired/corrupt session. Authenticated API rejections trigger the same recovery; ordinary permission errors and failed guest logins do not. Timers/listeners are cleaned up on logout and unmount.
+- Saved authentication finishes loading before route redirects run, preserving valid protected URLs across page refreshes.
+
+### Quick expiry test
+
+The app currently uses one JWT session token; it has no separate refresh-token flow. Both login and signup now issue **120-second tokens in development**. Restart the backend, sign out, sign in again, open a private page, and wait two minutes. The browser should reload All places and show the signed-out navigation. Existing tokens retain their original expiry.
+
+`JWT_TTL_SECONDS` in `Backend/.env` overrides the lifetime in seconds. For example, use `JWT_TTL_SECONDS=15` for an even shorter local test, or `JWT_TTL_SECONDS=3600` to return to one hour. Restart the backend and sign in again after changing it. Production defaults to 3600 seconds when no override is set.
+
+Verification: 60 regression tests, 26 isolated API checks, and the production build pass. Browser checks use a temporary server with fixture data; no account or trip records are created or modified.

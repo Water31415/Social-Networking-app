@@ -27,7 +27,7 @@ import { PlaceSearchContext } from './shared/components/context/place-search-con
 
 const App = () => {
 
-const {login,logout,token,userId}= CheckAuth() 
+const {login,logout,token,userId,isAuthReady}= CheckAuth()
 const [placeSearchTerm, setPlaceSearchTerm] = useState('');
 
 let routes
@@ -74,6 +74,9 @@ let routes
     
   }
 
+
+  // Restore the saved session before protected routes decide where to redirect.
+  if (!isAuthReady) return <div className="center"><LoadingText text="SnapIt" /></div>
 
   return (
     <AuthContext.Provider value={{

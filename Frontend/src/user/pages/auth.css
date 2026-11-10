@@ -5,7 +5,7 @@
   gap: clamp(2.5rem, 7vw, 7rem);
   width: min(100%, 68rem);
   margin: 0 auto;
-  padding: clamp(1.25rem, 4vh, 2.75rem) clamp(.25rem, 2vw, 1rem) 4rem;
+  padding: 1rem clamp(.25rem, 2vw, 1rem) 4rem;
 }
 .authentication-story { padding-top: .75rem; }
 .authentication-story__eyebrow,
@@ -19,17 +19,17 @@
 }
 .authentication-story__eyebrow { color: var(--accent); }
 .authentication-story h1 {
-  margin: 1rem 0 .85rem;
+  margin: .6rem 0;
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: clamp(2.3rem, 3.8vw, 3.6rem);
+  font-size: clamp(1.9rem, 2.8vw, 2.7rem);
   font-weight: 400;
   line-height: 1.04;
   letter-spacing: -.055em;
 }
 .authentication-story h1 em { color: var(--accent); font-weight: 400; }
 .authentication-story > p { max-width: 24rem; margin: 0; color: var(--text-secondary); font-size: .96rem; line-height: 1.8; }
-.authentication-story__notes { display: grid; gap: 1.4rem; margin: 1.75rem 0 1.5rem; padding: 0; list-style: none; }
+.authentication-story__notes { display: grid; gap: 1rem; margin: 1.25rem 0 1rem; padding: 0; list-style: none; }
 .authentication-story__notes li { display: flex; gap: 1rem; }
 .authentication-story__notes li > span { flex: 0 0 1.8rem; padding-top: .2rem; color: var(--signal); font-family: var(--font-mono); font-size: .65rem; }
 .authentication-story__notes strong { color: var(--text-primary); font-size: .88rem; font-weight: 550; }
@@ -50,7 +50,7 @@
 }
 .authentication__header { padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
 .authentication__header > span { color: var(--text-secondary); font-size: .58rem; letter-spacing: .12em; }
-.authentication__header h2 { margin: .75rem 0 .6rem; font-family: var(--font-display); font-size: 1.85rem; font-weight: 400; letter-spacing: -.035em; }
+.authentication__header h2 { margin: .5rem 0 .4rem; font-family: var(--font-display); font-size: 1.65rem; font-weight: 400; letter-spacing: -.035em; }
 .authentication__header p { margin: 0; color: var(--text-secondary); font-size: .83rem; }
 .authentication form { margin: 1.65rem 0 0; }
 .authentication form > .button { width: 100%; margin: .5rem 0 0; }
@@ -62,7 +62,7 @@
 @media (max-width: 850px) {
   .authentication-page { grid-template-columns: minmax(0, 1fr); max-width: 30rem; gap: 1.25rem; padding-top: .5rem; padding-inline: max(1rem, var(--content-gutter)); }
   .authentication-story { padding-top: 0; }
-  .authentication-story h1 { margin-top: .65rem; font-size: clamp(2.05rem, 6vw, 2.7rem); }
+  .authentication-story h1 { margin-top: .65rem; font-size: clamp(1.8rem, 5vw, 2.1rem); }
   .authentication-story__notes { display: none; }
   .authentication-story__footer { margin-top: 1.4rem; }
 }
