@@ -143,6 +143,8 @@ npm start
 
 For separate frontend hosting, set `REACT_APP_BACKEND_URL=https://your-api-domain` in the frontend build environment and publish `Frontend/build`. Configure an SPA fallback to `index.html`. Set `SERVE_FRONTEND=false` on the backend and add the frontend origin to `FRONTEND_ORIGINS`.
 
+The repository's `vercel.json` installs the frontend package including its build-time development dependencies, builds from the repository root, publishes `Frontend/build`, and sends client-side routes to the SPA entry point. For Vercel, import the repository with the **Root Directory** set to the repository root; set `REACT_APP_BACKEND_URL` in the Vercel project environment to the deployed API's HTTPS origin. Deploy the API separately and configure its database, JWT, provider, and allowed-origin variables in its hosting environment.
+
 ## Health checks and verification
 
 - `GET /healthz`: process liveness; 200 while running.
