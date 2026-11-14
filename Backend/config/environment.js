@@ -3,13 +3,32 @@ const dns = require('node:dns')
 const { isIP } = require('node:net')
 const dotenv = require('dotenv')
 
-const environmentPath = path.join(__dirname, '..', process.env.NODE_ENV === 'production' ? '.env.production' : '.env')
+const environmentPath = path.join(__dirname, '..', '.env')
+const configuredKeys = [
+  'DATABASE_API_KEY',
+  'DATABASE_DNS_SERVERS',
+  'FRONTEND_ORIGINS',
+  'GOOGLE_TRANSLATE_API_KEY',
+  'JWT_API_KEY',
+  'JWT_TTL_SECONDS',
+  'MAP_API_KEY',
+  'PORT',
+  'SERVE_FRONTEND'
+]
 
 const loadEnvironment = () => {
+  const externallyConfigured = new Set(configuredKeys.filter(name => process.env[name] !== undefined))
   const result = dotenv.config({ path: environmentPath, quiet: true })
   // Deployments may supply all configuration through the process environment.
   if (result.error && result.error.code !== 'ENOENT') {
     throw new Error('Could not read the backend environment file. Check its permissions.')
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    for (const name of configuredKeys) {
+      const productionValue = process.env[`PRODUCTION_${name}`]
+      if (!externallyConfigured.has(name) && productionValue?.trim()) process.env[name] = productionValue
+    }
   }
 }
 

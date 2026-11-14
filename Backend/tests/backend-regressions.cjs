@@ -130,10 +130,10 @@ test('environment file is anchored to Backend rather than the launch directory',
   assert.equal(config.configCalls[0].quiet, true);
 });
 
-test('production uses its own environment file without changing the development configuration', () => {
+test('production uses the shared environment file', () => {
   const config = environmentHarness({ NODE_ENV:'production' });
   config.loadEnvironment();
-  assert.equal(config.configCalls[0].path, path.join(backendRoot,'.env.production'));
+  assert.equal(config.configCalls[0].path, path.join(backendRoot,'.env'));
 });
 
 test('missing startup configuration fails without revealing configured values', () => {

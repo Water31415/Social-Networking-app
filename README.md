@@ -83,7 +83,7 @@ From the repository root:
 npm --prefix Backend ci
 npm --prefix Frontend ci
 if (-not (Test-Path Backend/.env)) { Copy-Item Backend/.env.example Backend/.env }
-if (-not (Test-Path Frontend/.env.development.local)) { Copy-Item Frontend/.env.example Frontend/.env.development.local }
+if (-not (Test-Path Frontend/.env)) { Copy-Item Frontend/.env.example Frontend/.env }
 ```
 
 Edit `Backend/.env` with your database URI and a real JWT secret. Generate a secret locally:
@@ -106,7 +106,7 @@ Open [localhost:3000](http://localhost:3000). Install and build in the same envi
 
 ### Environment configuration
 
-Development secrets belong in `Backend/.env`; production reads `Backend/.env.production` or the host's injected environment variables. Injected variables take precedence. Both files are ignored by Git. Frontend variables are public build-time configuration.
+Use one local configuration file per app: `Backend/.env` and `Frontend/.env`. The matching `.env.example` files are safe templates for fresh checkouts. Backend settings in `Backend/.env` work in development and production; `Backend/server.cjs` selects optional `PRODUCTION_` overrides when it starts. Variables injected by a deployment host take precedence. Frontend variables are public build-time configuration and are embedded into the frontend at build time.
 
 | Backend variable | Purpose |
 | --- | --- |
@@ -120,17 +120,18 @@ Development secrets belong in `Backend/.env`; production reads `Backend/.env.pro
 | `GOOGLE_TRANSLATE_API_KEY` | Google Cloud Translation API v2 key; translation returns 503 until configured. |
 | `DATABASE_DNS_SERVERS` | Optional resolver IPs for database DNS troubleshooting; normally empty. |
 | `SERVE_FRONTEND` | Serves the build in production; set `false` for an API-only deployment. |
+| `PRODUCTION_<VARIABLE>` | Optional production-only override for any setting above, such as `PRODUCTION_DATABASE_API_KEY` or `PRODUCTION_FRONTEND_ORIGINS`. |
 
 | Frontend variable | Purpose |
 | --- | --- |
 | `REACT_APP_BACKEND_URL` | Blank uses localhost:5000 in development and the current origin in production. For separate hosting, set an HTTPS backend origin before building. |
 | `PUBLIC_URL` | Asset base; leave blank for the included deployment at the domain root. |
 
-Keep local API addresses in `Frontend/.env.development.local`. Use `Frontend/.env.production.local` or build environment variables for a separate production API. Frontend environment changes require rebuilding; backend environment changes require restarting the server. Never put backend secrets in frontend configuration.
+Leave `REACT_APP_BACKEND_URL` blank to use localhost:5000 in development and the current origin in production. For separately hosted frontend and backend, set it to the backend's HTTPS origin in `Frontend/.env` or the frontend host's build environment. Frontend environment changes require rebuilding; backend environment changes require restarting the server. Never put backend secrets in frontend configuration.
 
 ## Production deployment
 
-Install both packages and configure `Backend/.env.production` as above. For a local production preview, use an available port such as 8080; on a hosting provider, use its assigned `PORT` instead:
+Install both packages and configure `Backend/.env` or the hosting provider's environment variables as above. For a local production preview, use an available port such as 8080; on a hosting provider, use its assigned `PORT` instead:
 
 ```powershell
 npm run build
@@ -140,7 +141,7 @@ npm start
 
 `npm start` runs `Backend/server.cjs` in production mode, serving `Frontend/build` and the API on `PORT`. Put the process behind managed HTTPS or a reverse proxy and provide durable storage for `Backend/uploads/images`.
 
-For separate frontend hosting, build with `REACT_APP_BACKEND_URL=https://your-api-domain` and publish `Frontend/build`. Configure an SPA fallback to `index.html`. Set `SERVE_FRONTEND=false` on the backend and add the frontend origin to `FRONTEND_ORIGINS`.
+For separate frontend hosting, set `REACT_APP_BACKEND_URL=https://your-api-domain` in the frontend build environment and publish `Frontend/build`. Configure an SPA fallback to `index.html`. Set `SERVE_FRONTEND=false` on the backend and add the frontend origin to `FRONTEND_ORIGINS`.
 
 ## Health checks and verification
 
