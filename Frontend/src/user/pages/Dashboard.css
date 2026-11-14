@@ -17,7 +17,7 @@
 .analytics-grid .analytics-card:first-child { padding-left: 0; }
 .analytics-grid .analytics-card:last-child { padding-right: 0; border-right: 0; }
 .analytics-card__label { color: var(--text-secondary, #a6aca3); font-size: .74rem; }
-.analytics-card__value-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: .65rem 0; }
+.analytics-card__value-row { display: flex; flex-wrap:wrap; align-items: center; justify-content: space-between; gap: .5rem; margin: .65rem 0; }
 .analytics-card strong { min-width: 0; overflow: hidden; color: var(--text-primary); font-family: var(--font-display, Georgia, serif); font-size: clamp(2rem, 3vw, 3rem); font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: -.045em; line-height: 1.1; text-overflow: ellipsis; }
 .analytics-card:first-child strong { color: var(--signal); }
 .analytics-card__sparkline { flex: 0 0 3.2rem; width: 3.2rem; height: 1.35rem; color: var(--accent, #c5a2fa); }

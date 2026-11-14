@@ -97,6 +97,7 @@
   padding: 1.5rem;
   text-align: left;
   border-bottom: 1px solid var(--card-divider);
+  overflow-wrap: anywhere;
 }
 
 .place-item__info h2,
@@ -177,16 +178,24 @@
 .place-item__engagement [role="status"] { margin-left: auto; font-size: 0.78rem; }
 .place-item__map-button { margin-left: auto; }
 .place-item__directions-button { text-decoration: none; }
-.place-item__comments { padding:1.25rem 1.5rem; border-top:1px solid var(--card-divider); background:var(--surface); }
+.place-item__comments { padding:1.25rem 1.5rem; border-top:1px solid var(--card-divider); background:var(--surface); overflow-wrap:anywhere; }
 .place-item__comments h3 { margin-top:0; font-family:var(--font-mono); font-size:.7rem; font-weight:500; letter-spacing:.06em; text-transform:uppercase; }
-.place-item__comments form { display:flex; gap:.5rem; }
+.place-item__comments form { display:flex; flex-wrap:wrap; gap:.5rem; }
+.place-item__comments form > .button { margin:0; }
 .place-item__comments input { flex:1; min-width:0; padding:.65rem .75rem; border:1px solid var(--border); border-radius:var(--radius-control); background:var(--app-background); color:var(--text-primary); }
 .place-item__comments input:focus { border-color:var(--accent); outline:0; box-shadow:0 0 0 3px var(--accent-soft); }
-.place-item__translate { display:inline-flex; align-items:center; gap:.5rem; margin-top:.5rem; font-size:.85rem; }
-.place-item__translate select { padding:.35rem; }
+.place-item__translate { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem; margin-top:1rem; color:var(--text-secondary); font-size:.78rem; }
+.place-item__translate select { min-width:0; max-width:100%; min-height:2.75rem; padding:.5rem .65rem; border:1px solid var(--border); border-radius:8px; color:var(--text-primary); background:var(--app-background); }
 .map-container{
   height: 15rem;
   width : 100%;
+}
+
+@media (max-width:480px) {
+  .place-item__info,.place-item__comments { padding:1.1rem; }
+  .place-item__info h2 { padding-right:0; font-size:1.7rem; }
+  .place-item__translate { align-items:stretch; flex-direction:column; }
+  .place-item__comments input { flex-basis:10rem; }
 }
 
 @media (min-width: 761px) {

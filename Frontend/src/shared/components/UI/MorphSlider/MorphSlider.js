@@ -11,20 +11,18 @@ const MorphSlider = ({ items = [], onSelect, onHeightChange, label = 'Your place
     const slider = sliderRef.current;
     if (!slider) return undefined;
     const observer = new ResizeObserver(entries => {
-      const width = entries[entries.length - 1]?.contentRect.width || slider.clientWidth;
+      const bounds = entries[entries.length - 1]?.contentRect;
+      const width = bounds?.width || slider.clientWidth;
       setImageWidth(Math.min(400, Math.max(1, width)));
+      if (bounds?.height) onHeightChange?.(Math.round(bounds.height));
     });
     observer.observe(slider);
     return () => observer.disconnect();
-  }, []);
+  }, [onHeightChange]);
 
   const activeImage = items[activeIndex]?.image;
   const aspectRatio = aspectRatios[activeImage] || 1.5;
   const sliderHeight = Math.round(imageWidth / aspectRatio);
-
-  useEffect(() => {
-    if (items.length) onHeightChange?.(sliderHeight);
-  }, [items.length, onHeightChange, sliderHeight]);
 
   if (!items.length) return null;
 

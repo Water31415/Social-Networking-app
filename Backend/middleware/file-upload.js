@@ -1,6 +1,7 @@
 const multer =require("multer")
-const { v4: uuid } = require('uuid')
+const { randomUUID: uuid } = require('node:crypto')
 const path = require('path');
+const fs = require('node:fs')
 
 const MIME_TYPE_MAP ={
     'image/png':'png',
@@ -8,7 +9,7 @@ const MIME_TYPE_MAP ={
     'image/jpg':'jpg',
 }
 const fileUpload=multer({
-    limits:{fileSize:5000000},
+    limits:{fileSize:5 * 1024 * 1024},
     fileFilter:(req,file,cb)=>{
         const isValid=!!MIME_TYPE_MAP[file.mimetype]
         const error = isValid ? null : new Error('Only PNG and JPEG images are allowed')
@@ -17,7 +18,8 @@ const fileUpload=multer({
     },
     storage:multer.diskStorage({
         destination:(req,file,cb)=>{
-            cb(null,path.join(__dirname,'..','uploads','images'))
+            const directory = path.join(__dirname,'..','uploads','images')
+            fs.mkdir(directory, { recursive:true }, error => cb(error, directory))
         },
         filename:(req,file,cb)=>cb(null,uuid()+'.'+MIME_TYPE_MAP[file.mimetype]),
     })

@@ -1,0 +1,13 @@
+const express = require('express')
+const controller = require('../controllers/saved-places-controller')
+const validateId = require('../middleware/validate-id')
+const router = express.Router()
+router.param('pid', validateId)
+router.param('cid', validateId)
+router.get('/', controller.getSavedPlaces)
+router.post('/collections', controller.createCollection)
+router.patch('/collections/:cid', controller.renameCollection)
+router.delete('/collections/:cid', controller.deleteCollection)
+router.put('/:pid', controller.savePlace)
+router.delete('/:pid', controller.removeSavedPlace)
+module.exports = router

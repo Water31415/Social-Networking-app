@@ -12,7 +12,7 @@ export const CheckAuth = () => {
     setToken(null)
     setTokenExpirationDate(null)
     setUserId(null)
-    window.localStorage.removeItem('userData')
+    try { window.localStorage.removeItem('userData') } catch {}
   }, [])
 
   const expireSession = useCallback(() => {
@@ -33,9 +33,9 @@ export const CheckAuth = () => {
     setToken(nextToken)
     setUserId(uid)
     setTokenExpirationDate(expires)
-    window.localStorage.setItem('userData', JSON.stringify({
-      userId: uid, token: nextToken, expirationDate: expires.toISOString()
-    }))
+    try {
+      window.localStorage.setItem('userData', JSON.stringify({ userId: uid, token: nextToken, expirationDate: expires.toISOString() }))
+    } catch {}
   }, [expireSession])
 
   useEffect(() => {
@@ -43,21 +43,25 @@ export const CheckAuth = () => {
     const checkExpiration = () => {
       if (tokenExpirationDate.getTime() <= Date.now()) expireSession()
     }
+    const rejectSession = event => {
+      if (!event.detail?.token || event.detail.token === token) expireSession()
+    }
     const timer = window.setTimeout(expireSession, Math.max(0, tokenExpirationDate.getTime() - Date.now()))
     window.addEventListener('focus', checkExpiration)
     document.addEventListener('visibilitychange', checkExpiration)
-    window.addEventListener('snapit:session-expired', expireSession)
+    window.addEventListener('snapit:session-expired', rejectSession)
     return () => {
       window.clearTimeout(timer)
       window.removeEventListener('focus', checkExpiration)
       document.removeEventListener('visibilitychange', checkExpiration)
-      window.removeEventListener('snapit:session-expired', expireSession)
+      window.removeEventListener('snapit:session-expired', rejectSession)
     }
   }, [token, tokenExpirationDate, expireSession])
 
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem('userData')
+      let saved
+      try { saved = window.localStorage.getItem('userData') } catch { return }
       if (!saved) return
       const stored = JSON.parse(saved)
       login(stored?.userId, stored?.token, stored?.expirationDate)

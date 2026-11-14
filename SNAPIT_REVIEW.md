@@ -1,5 +1,7 @@
 # SnapIt fixes and validation
 
+Historical review. See [PROJECT_AUDIT.md](PROJECT_AUDIT.md) for the 13 November 2026 audit, current test results, dependency updates, and outstanding database/provider issues.
+
 Updated 28 October 2026 (Asia/Kolkata).
 
 Project: `C:\MERN PROJECT\Social-Networking-app`.

@@ -66,7 +66,7 @@ const UpdatePlace =()=>{
  
         try {
             
-                await sendRequest(backendUrl(`api/places/${placeId}`),
+                const response = await sendRequest(backendUrl(`api/places/${placeId}`),
                     'PATCH',
                     JSON.stringify({
                         title : formState.inputs.title.value,
@@ -78,6 +78,11 @@ const UpdatePlace =()=>{
                 )
                 
                 
+                window.dispatchEvent(new CustomEvent('snapit:place-updated', { detail:{ place:{
+                    id:response.place?.id || response.place?._id || loadedPlaces?.id || loadedPlaces?._id || placeId,
+                    title:response.place?.title || formState.inputs.title.value,
+                    description:response.place?.description || formState.inputs.description.value
+                } } }))
                 history.push('/'+  auth.userId + '/places')
 
             

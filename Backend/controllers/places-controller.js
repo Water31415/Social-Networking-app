@@ -5,8 +5,8 @@ const HttpError = require('../models/http-error')
 const getCoordsForAddress = require('../utils/location')
 const Place =require("../models/places")
 const User = require("../models/user")
-const path = require('path')
-const getStoredUploadPath = imagePath => path.resolve(__dirname, '..', String(imagePath || '').replace(/^[/\\]+/, ''))
+const getStoredUploadPath = require('../utils/upload-path')
+const { validCoords, isNumeric } = require('../utils/request-input')
 const toPlaceListObject = place => {
     const placeObject = place.toObject({ getters: true })
     placeObject.creatorName = place.creator?.name || ''
@@ -59,8 +59,8 @@ const getPlacesByUserId=async(req,res,next)=>{
 const getNearbyPlaces=async(req,res,next)=>{
     const latitude=Number(req.query.lat)
     const longitude=Number(req.query.lng)
-    const radiusKm=Math.min(Number(req.query.radius) || 100,100)
-    if(!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180){
+    const radiusKm=req.query.radius === undefined ? 100 : Math.min(Number(req.query.radius),100)
+    if(!validCoords({lat:req.query.lat,lng:req.query.lng}) || !isNumeric(radiusKm) || radiusKm <= 0){
         return next(new HttpError('Valid latitude and longitude are required',422))
     }
     try {
@@ -85,7 +85,6 @@ const getNearbyPlaces=async(req,res,next)=>{
 const createPlace =async(req,res,next)=>{
     const errors=validationResult(req)
     if (!errors.isEmpty()) {
-        console.error(errors);
          
         return next( new HttpError("Invalid data entry",422))
         
@@ -127,6 +126,7 @@ const createPlace =async(req,res,next)=>{
         user.places.push(createdPlace)
         await user.save({session :sess})
         await sess.commitTransaction()
+        req.uploadsCommitted = true
         await sess.endSession()
     } catch (error) {
         if (sess) { await sess.abortTransaction(); await sess.endSession() }
@@ -141,7 +141,6 @@ const createPlace =async(req,res,next)=>{
 const updatePlace = async(req,res,next)=>{
     const errors=validationResult(req)
     if (!errors.isEmpty()) {
-        console.error(errors);
         
         return next(new HttpError("Invalid data entry",422))
         
@@ -157,7 +156,7 @@ const updatePlace = async(req,res,next)=>{
     }
     if (!place) return next(new HttpError('Place not found',404))
     if (place.creator.toString() !== req.userData.userId ) {
-        return next(new HttpError('not allowed to edit this place',401))
+        return next(new HttpError('not allowed to edit this place',403))
     }
     place.title=title,
     place.description=description
@@ -182,12 +181,12 @@ const deletePlace =async(req,res,next)=>{
         return next(new HttpError("Place does not exist",404))
     }
     if (place.creator.id !== req.userData.userId ) {
-        return next(new HttpError('not allowed to edit this place',401))
+        return next(new HttpError('not allowed to edit this place',403))
     }
     
 
     const imagePaths=(place.images && place.images.length ? place.images : [place.image]).filter(Boolean)
-        .map(getStoredUploadPath)
+        .map(getStoredUploadPath).filter(Boolean)
 
     let sess
     try{
@@ -203,7 +202,7 @@ const deletePlace =async(req,res,next)=>{
         if (sess) { await sess.abortTransaction(); await sess.endSession() }
         return next(new HttpError("Could not delete place",500))
     }
-    imagePaths.forEach(imagePath=>fs.unlink(imagePath, err=>{ if (err) console.error('Unable to remove uploaded image:',err) }))
+    imagePaths.forEach(imagePath=>fs.unlink(imagePath, err=>{ if (err && err.code !== 'ENOENT') console.error('Unable to remove uploaded image:',err) }))
     res.status(200).json({message : 'deleted place'})
 
 }

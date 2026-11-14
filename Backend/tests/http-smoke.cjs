@@ -65,11 +65,19 @@ const token = jwt.sign({ userId: '507f1f77bcf86cd799439011', email: 'test@exampl
     await check('public user list', '/api/users', {}, 200, async r => assert.deepEqual((await r.json()).users, []));
     await check('public places list', '/api/places', {}, 200, async r => assert.deepEqual((await r.json()).places, []));
     await check('trips require authentication', '/api/trips/active', {}, 403);
+    await check('saved places require authentication', '/api/users/me/saved', {}, 403);
+    await check('saving a place requires authentication', '/api/users/me/saved/507f1f77bcf86cd799439012', { method:'PUT' }, 403);
+    await check('saved places reject malformed place ids', '/api/users/me/saved/not-an-id', { ...json({}), method:'PUT' }, 422);
+    await check('saved collections reject malformed ids', '/api/users/me/saved/collections/not-an-id', { method:'DELETE', headers:auth }, 422);
+    await check('saved collections reject empty names', '/api/users/me/saved/collections', json({ name:'  ' }), 422);
     await check('place creation requires authentication', '/api/places', { method: 'POST' }, 403);
     await check('invalid bearer token rejected', '/api/trips/active', { headers: { Authorization: 'Bearer invalid' } }, 403);
     await check('valid bearer token accepted', '/api/trips/active', { headers: auth }, 200,
       async r => assert.equal((await r.json()).trip, null));
     await check('invalid login body rejected', '/api/users/login', json({}), 422);
+    await check('missing login body rejected', '/api/users/login', { method: 'POST' }, 422);
+    await check('missing signup body rejected', '/api/users/signup', { method: 'POST' }, 422);
+    await check('missing trip body rejected', '/api/trips/start', { method: 'POST', headers: auth }, 422);
     await check('invalid signup body rejected', '/api/users/signup', json({}), 422);
     await check('signup requires profile image', '/api/users/signup', json({ name: 'Test', email: 'test@example.invalid', password: 'testpassword' }), 422);
     await check('unknown login account rejected', '/api/users/login', json({ email: 'test@example.invalid', password: 'testpassword' }), 401);
@@ -83,9 +91,28 @@ const token = jwt.sign({ userId: '507f1f77bcf86cd799439011', email: 'test@exampl
     await check('nearby rejects invalid coordinates', '/api/places/nearby?lat=999&lng=0', {}, 422);
     await check('nearby accepts valid coordinates', '/api/places/nearby?lat=28.6&lng=77.2', {}, 200,
       async r => assert.deepEqual((await r.json()).places, []));
+    await check('blank nearby latitude is not treated as zero', '/api/places/nearby?lat=&lng=0', {}, 422);
+    await check('negative nearby radius rejected', '/api/places/nearby?lat=0&lng=0&radius=-1', {}, 422);
+    await check('malformed place id rejected before database lookup', '/api/places/not-an-id', {}, 422);
+    await check('malformed trip id rejected before database lookup', '/api/trips/not-an-id', { headers: auth }, 422);
+    await check('malformed follow target rejected', '/api/users/not-an-id/follow', json({}), 422);
+    await check('null coordinates are not treated as zero', '/api/trips/location/reverse-geocode', json({ lat: null, lng: 0 }), 422);
+    await check('malformed starting point rejected', '/api/trips/start', json({ title: 'Trip', startLocation: '{broken' }), 422);
+    await check('malformed itinerary JSON rejected', '/api/trips/start', json({ title: 'Trip', itinerary: '{broken' }), 422);
+    await check('non-array itinerary rejected', '/api/trips/start', json({ title: 'Trip', itinerary: {} }), 422);
+    await check('invalid itinerary day rejected', '/api/trips/start', json({ title: 'Trip', itinerary: [{ day: 0, plannedPlace: 'Delhi' }] }), 422);
+    await check('invalid trip visibility rejected', '/api/trips/start', json({ title: 'Trip', visibility: 'everyone' }), 422);
+    await check('non-string login password rejected', '/api/users/login', json({ email: 'test@example.invalid', password: {} }), 422);
+    await check('whitespace place title rejected', '/api/places', json({ title: '   ', description: 'Description', address: 'Delhi' }), 422);
+    await check('object comment text rejected', '/api/places/507f1f77bcf86cd799439012/comments', json({ text: {} }), 422);
+    await check('localhost IP alias receives CORS headers', '/api/nonexistent', { headers: { Origin: 'http://127.0.0.1:3000' } }, 404,
+      r => assert.equal(r.headers.get('access-control-allow-origin'), 'http://127.0.0.1:3000'));
+    await check('malformed JSON retains CORS headers', '/api/users/login', { method: 'POST', headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' }, body: '{broken' }, 400,
+      r => assert.equal(r.headers.get('access-control-allow-origin'), 'http://localhost:3000'));
     await check('empty translation body rejected', '/api/translate', json({}), 422);
     await check('missing translation key returns 503', '/api/translate', json({ text: 'Hello', target: 'hi' }), 503);
     await check('following self rejected', '/api/users/507f1f77bcf86cd799439011/follow', json({}), 422);
+    await check('uppercase ids cannot bypass the self-follow check', '/api/users/507F1F77BCF86CD799439011/follow', json({}), 422);
     await check('malformed JSON returns 400', '/api/users/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{bad' }, 400);
     const form = new FormData();
     form.append('image', new Blob(['plain text'], { type: 'text/plain' }), 'bad.txt');

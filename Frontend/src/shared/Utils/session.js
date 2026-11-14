@@ -18,6 +18,6 @@ export const notifySessionRejected = (response, headers = {}, data = {}) => {
   // A failed login must not reload a guest's page.
   if (authorization && /^Bearer\s+(?!null$|undefined$)/i.test(authorization)
       && (response.status === 401 || (response.status === 403 && data.message === 'Authentication failed'))) {
-    window.dispatchEvent(new window.Event('snapit:session-expired'))
+    window.dispatchEvent(new window.CustomEvent('snapit:session-expired', { detail: { token: authorization.replace(/^Bearer\s+/i, '') } }))
   }
 }

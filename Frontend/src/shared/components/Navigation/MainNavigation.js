@@ -42,13 +42,27 @@ const MainNavigation = props =>{
             }
 
             let cancelled = false
+            let latestRequest = 0
             const storageKey = `snapit:seen-milestones:${auth.userId}`
             const checkForMilestones = async () => {
+                const requestId = ++latestRequest
                 try {
                     const data = await sendRequest(backendUrl('api/places/analytics'),'GET',null,{Authorization:`Bearer ${auth.token}`})
-                    if (cancelled) return
+                    if (cancelled || requestId !== latestRequest) return
+                    window.dispatchEvent(new CustomEvent('snapit:analytics-updated', { detail:{ userId:auth.userId, analytics:data } }))
                     const earned = (data.badges || []).filter(badge => badge.earned).map(badge => badge.id)
                     earnedMilestonesRef.current = earned
+                    // Establish a baseline before a first dashboard visit so cards
+                    // earned elsewhere in the app can be revealed when it opens.
+                    try {
+                        const revealKey = `snapit:revealed-milestones:${auth.userId}`
+                        if (window.localStorage.getItem(revealKey) === null) window.localStorage.setItem(revealKey, JSON.stringify([...earned].sort()))
+                    } catch (error) {}
+                    if (location.pathname === '/dashboard') {
+                        try { window.localStorage.setItem(storageKey, JSON.stringify(earned)) } catch (error) {}
+                        setHasNewMilestone(false)
+                        return
+                    }
 
                     let saved = null
                     try { saved = window.localStorage.getItem(storageKey) } catch (error) {}
@@ -96,6 +110,7 @@ const MainNavigation = props =>{
         const submitSearch = event => {
             event.preventDefault()
             const isPlacesRoute = location.pathname === '/'
+                || location.pathname === '/saved'
                 || location.pathname === '/near-me'
                 || /^\/[^/]+\/places$/.test(location.pathname)
             if (!isPlacesRoute && searchTerm.trim()) history.push('/')

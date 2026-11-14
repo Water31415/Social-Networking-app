@@ -14,6 +14,8 @@ import ActiveTrip from './trips/pages/ActiveTrip.js';
 import ReviewTrip from './trips/pages/ReviewTrip.js';
 import { TripProvider } from './shared/components/context/trip-context.js';
 import { CheckAuth } from './shared/hooks/auth-hook.js';
+import { SavedPlacesProvider } from './shared/components/context/saved-places-context.js';
+import SavedPlaces from './places/pages/SavedPlaces.js';
 import { LoadingText } from './shared/components/UI';
 import { PlaceSearchContext } from './shared/components/context/place-search-context.js';
 //const User = React.lazy(()=> import('./user/pages/user.js'))
@@ -40,20 +42,17 @@ let routes
         <Places/>
       </Route>
       <Route path="/near-me" exact><NearbyPlaces/></Route>
-      <Route path ="/:userId/places" exact >
-        <UserPlaces/>
-      </Route>
+      <Route path="/:userId/places" exact render={({ match }) => <UserPlaces key={match.params.userId} />} />
       <Route path="/dashboard" exact><Dashboard/></Route>
+      <Route path="/saved" exact><SavedPlaces/></Route>
       <Route path="/places/new" exact><Redirect to="/?create=1"/></Route>
       <Route path="/places/new/place" exact><NewPlace/></Route>
       <Route path="/places/new/trip" exact><StartTrip/></Route>
       <Route path="/trips/start" exact><Redirect to="/places/new/trip"/></Route>
       <Route path="/trips/:tripId/publish" exact render={({ match }) => <Redirect to={`/trips/${match.params.tripId}/review`} />} />
-      <Route path="/trips/:tripId/review" exact><ReviewTrip/></Route>
-      <Route path="/trips/:tripId" exact><ActiveTrip/></Route>
-      <Route path="/places/:placeId">
-        <UpdatePlace/>
-      </Route>
+      <Route path="/trips/:tripId/review" exact render={({ match }) => <ReviewTrip key={match.params.tripId} />} />
+      <Route path="/trips/:tripId" exact render={({ match }) => <ActiveTrip key={match.params.tripId} />} />
+      <Route path="/places/:placeId" exact render={({ match }) => <UpdatePlace key={match.params.placeId} />} />
         <Redirect to="/" />
       </Switch>
     )
@@ -63,7 +62,7 @@ let routes
       <Route path = "/" exact>
         <Places/>
       </Route>
-      <Route path ="/:userId/places" exact ><UserPlaces/></Route>
+      <Route path="/:userId/places" exact render={({ match }) => <UserPlaces key={match.params.userId} />} />
         <Route path ="/auth">
           <AuthUser/>
         </Route>
@@ -87,6 +86,7 @@ let routes
       userId:userId
     }}>
     <TripProvider>
+    <SavedPlacesProvider key={userId || 'guest'}>
     <PlaceSearchContext.Provider value={{ searchTerm: placeSearchTerm, setSearchTerm: setPlaceSearchTerm }}>
     <Router>
       <div className="app-shell">
@@ -100,7 +100,8 @@ let routes
       </div>
   </Router>
   </PlaceSearchContext.Provider>
-  </TripProvider>
+    </SavedPlacesProvider>
+    </TripProvider>
   </AuthContext.Provider>
   )
   

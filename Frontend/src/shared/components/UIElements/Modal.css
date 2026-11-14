@@ -5,6 +5,7 @@
   left: 10%;
   width: 80%;
   max-height: 82vh;
+  max-height: 82dvh;
   display: flex;
   flex-direction: column;
   background: var(--surface);
@@ -16,6 +17,7 @@
 }
 
 .modal > form { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
+.modal:focus { outline:none; }
 
 .modal__header {
   width: 100%;
@@ -30,6 +32,7 @@
   font-family: var(--font-display);
   font-size: 1.65rem;
   font-weight: 400;
+  overflow-wrap: anywhere;
 }
 
 .modal__content {

@@ -11,7 +11,7 @@ const { getJwtSecret, getJwtLifetimeSeconds } = require('../config/environment')
 const getUser =async(req,res,next)=>{
   let users  
   try {
-     users = await User.find({},"-password -followers -following")
+     users = await User.find({},"name image places")
     } catch (error) {
       return next(new HttpError("Fetching user failed , try again ",500))
     }
@@ -20,8 +20,8 @@ const getUser =async(req,res,next)=>{
 }
 
 const followUser = async (req, res, next) => {
-  const followerId = req.userData.userId
-  const targetId = req.params.uid
+  const followerId = req.userData.userId.toLowerCase()
+  const targetId = req.params.uid.toLowerCase()
   if (followerId === targetId) return next(new HttpError('You cannot follow yourself', 422))
   try {
     const [target, follower] = await Promise.all([User.findById(targetId), User.findById(followerId)])
@@ -60,7 +60,7 @@ const signUp = async(req,res,next)=>{
   try { existingUser = await User.findOne({email :email}) }
   catch (error) { return next(new HttpError("Could not verify the account",500)) }
   if(existingUser){
-    return next(new HttpError("User already exist,try diff email",500))
+    return next(new HttpError("An account with this email already exists",409))
   }
 
   let hashedPassword
@@ -81,9 +81,9 @@ const signUp = async(req,res,next)=>{
   )
   try {
     await createdUser.save()
+    req.uploadsCommitted = true
   } catch (error) {
-    //console.error(error);
-    
+    if (error.code === 11000) return next(new HttpError('This name or email is already in use',409))
     return next(new HttpError("creating user failed , try again",500))
   }
   let token
@@ -102,7 +102,6 @@ const signUp = async(req,res,next)=>{
 const login =async(req,res,next)=>{
   const errors=validationResult(req)
     if (!errors.isEmpty()) {
-        console.error(errors);
         
         return next(new  HttpError("Invalid data entry",422))
         

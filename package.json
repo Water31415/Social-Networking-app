@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "start": "npm --prefix Backend run start:production",
     "start:frontend": "npm --prefix Frontend start",
     "start:backend": "npm --prefix Backend start",
     "build": "npm --prefix Frontend run build",
-    "test": "node --test Backend/tests/backend-regressions.cjs Backend/tests/frontend-regressions.cjs Backend/tests/trip-regressions.cjs",
+    "test": "node --test Backend/tests/backend-regressions.cjs Backend/tests/frontend-regressions.cjs Backend/tests/trip-regressions.cjs Backend/tests/saved-places-regressions.cjs",
     "test:api": "node Backend/tests/http-smoke.cjs",
     "test:database": "node Backend/tests/mongo-connectivity.cjs",
-    "test:live": "node Backend/tests/live-smoke.cjs"
+    "test:saved-database": "node Backend/tests/saved-places-database.cjs",
+    "test:live": "node Backend/tests/live-smoke.cjs",
+    "test:running": "node Backend/tests/live-smoke.cjs --running",
+    "test:production": "node Backend/tests/production-smoke.cjs"
   }
 }

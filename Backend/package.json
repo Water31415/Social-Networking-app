@@ -5,11 +5,19 @@
   "license": "ISC",
   "author": "sarthak",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "node --test tests/backend-regressions.cjs tests/trip-regressions.cjs",
+    "test": "node --test tests/backend-regressions.cjs tests/trip-regressions.cjs tests/saved-places-regressions.cjs",
     "test:api": "node tests/http-smoke.cjs",
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "start:production": "node server.cjs"
+  },
+  "nodemonConfig": {
+    "legacyWatch": true,
+    "pollingInterval": 1000,
+    "delay": 300,
+    "watch": ["app.js", "config", "controllers", "middleware", "models", "routes", "utils", ".env"],
+    "ext": "js,cjs,json,env"
   },
   "dependencies": {
     "axios": "^1.19.0",
@@ -21,11 +29,12 @@
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.1",
-    "mongoose-unique-validator": "^6.1.1",
-    "multer": "^2.3.0",
-    "uuid": "^3.4.0"
+    "multer": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=20.19"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "3.1.11"
   }
 }

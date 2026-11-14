@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Link, useHistory, useParams } from 'react-router-dom'
 import { AuthContext } from '../../shared/components/context/auth-context'
 import { useTrip } from '../../shared/components/context/trip-context'
@@ -6,6 +6,7 @@ import { LoadingText, TripItineraryEditor, TripMap } from '../../shared/componen
 import { backendUrl, backendImageUrl } from '../../shared/Utils/backend-url'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import ErrorModal from '../../shared/components/UIElements/ErrorModal'
+import { removeDraft } from '../../shared/Utils/draft-storage'
 import './TripPages.css'
 
 const LANGUAGES = [['es','Spanish'],['fr','French'],['de','German'],['hi','Hindi'],['ja','Japanese'],['pt','Portuguese']]
@@ -36,6 +37,7 @@ const ReviewTrip = () => {
   const [language, setLanguage] = useState('')
   const [translatedTrip, setTranslatedTrip] = useState(null)
   const [translationError, setTranslationError] = useState('')
+  const translationSequence = useRef(0)
   const load = useCallback(async () => {
     try { const data = await sendRequest(backendUrl(`api/trips/${tripId}`), 'GET', null, { Authorization: `Bearer ${auth.token}` }); setTrip(data.trip) }
     catch {}
@@ -72,11 +74,12 @@ const ReviewTrip = () => {
     const form = new FormData(); form.append('title', trip.title); form.append('visibility', trip.visibility); form.append('itinerary', JSON.stringify(trip.itinerary || [])); if (cover) form.append('coverImage', cover)
     try {
       const data = await sendRequest(backendUrl(`api/trips/${tripId}/publish`), 'PATCH', form, { Authorization: `Bearer ${auth.token}` })
-      setTrip(data.trip); localStorage.removeItem(`snapit-stop-draft-${tripId}`); await refreshActiveTrip(); setMessage('Trip published!'); history.push(`/${auth.userId}/places`)
+      setTrip(data.trip); removeDraft(`snapit-stop-draft-${tripId}`); await refreshActiveTrip(); setMessage('Trip published!'); history.push(`/${auth.userId}/places`)
     } catch {}
   }
   const translateTrip = async event => {
     const target = event.target.value
+    const requestId = ++translationSequence.current
     setLanguage(target)
     setTranslatedTrip(null)
     setTranslationError('')
@@ -106,8 +109,8 @@ const ReviewTrip = () => {
           nextTranslation.stops[field.stopId][field.field] = results[index].translatedText
         }
       })
-      setTranslatedTrip(nextTranslation)
-    } catch (error) { setTranslationError(error.message || 'Google Translate could not translate this trip.') }
+      if (requestId === translationSequence.current) setTranslatedTrip(nextTranslation)
+    } catch (error) { if (requestId === translationSequence.current) setTranslationError(error.message || 'Google Translate could not translate this trip.') }
   }
   const deleteTrip = async () => {
     if (!window.confirm('Delete this trip and all of its stop photos?')) return

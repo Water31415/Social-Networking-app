@@ -1,5 +1,6 @@
-import React, { useId, useState } from 'react'
+import React, { useContext, useEffect, useId, useRef, useState } from 'react'
 import FlipCard from '../../shared/components/UI/Badges/FlipCard'
+import { AuthContext } from '../../shared/components/context/auth-context'
 import './AchievementCollection.css'
 
 const MILESTONES = {
@@ -26,10 +27,42 @@ const MilestoneProgress = ({ badge, meta, analytics }) => {
 }
 
 const AchievementCollection = ({ analytics }) => {
+  const { userId } = useContext(AuthContext)
   const [filter, setFilter] = useState('all')
+  const [newlyEarned, setNewlyEarned] = useState([])
+  const previous = useRef(null)
   const artworkFilterId = `milestone-ink-${useId().replace(/:/g, '')}`
   const badges = analytics.badges || []
   const earned = badges.filter(badge => badge.earned).length
+  const earnedSignature = JSON.stringify(badges.filter(badge => badge.earned).map(badge => badge.id).sort())
+  useEffect(() => {
+    if (!badges.length) return
+    const ids = JSON.parse(earnedSignature)
+    if (previous.current?.userId === userId && previous.current.signature === earnedSignature) return
+    let before = previous.current?.userId === userId ? previous.current.ids : null
+    const key = userId ? `snapit:revealed-milestones:${userId}` : null
+    if (before === null && key) {
+      try {
+        const stored = JSON.parse(window.localStorage.getItem(key) || 'null')
+        if (Array.isArray(stored) && stored.every(id => typeof id === 'string')) before = stored
+      } catch {}
+    }
+    setNewlyEarned(before === null ? [] : ids.filter(id => !before.includes(id)))
+    previous.current = { userId, ids, signature:earnedSignature }
+    if (key) { try { window.localStorage.setItem(key, earnedSignature) } catch {} }
+  }, [userId, earnedSignature, badges.length])
+  useEffect(() => {
+    if (!newlyEarned.length) return undefined
+    const timer = window.setTimeout(() => setNewlyEarned([]), 4500)
+    return () => window.clearTimeout(timer)
+  }, [newlyEarned])
+  const next = badges.filter(badge => !badge.earned && MILESTONES[badge.id]?.target).map(badge => {
+    const meta = MILESTONES[badge.id]
+    const current = Math.min(meta.target, Math.max(0, Number(analytics[meta.metric]) || 0))
+    return { badge, meta, current, ratio:current / meta.target }
+  }).sort((a,b) => b.ratio - a.ratio)[0]
+  const remaining = next ? next.meta.target - next.current : 0
+  const nextUnit = next ? ({ places:'place', likesReceived:'like', commentsReceived:'comment', sharesReceived:'share' }[next.meta.metric]) : ''
   const visible = badges.filter(badge => filter === 'all' || (filter === 'earned' ? badge.earned : !badge.earned))
   const filters = [{ id: 'all', label: 'All milestones', count: badges.length }, { id: 'earned', label: 'Collected', count: earned }, { id: 'locked', label: 'To discover', count: badges.length - earned }]
 
@@ -43,6 +76,12 @@ const AchievementCollection = ({ analytics }) => {
         </div></div>
       </div>
     </header>
+    {next ? <div className="achievement-next" role="region" aria-label="Next card to unlock">
+      <div className="achievement-next__rank" aria-hidden="true">{({ Ace:'A', Ten:'10', Jack:'J', Queen:'Q', King:'K' })[next.meta.rank]}<span>♠</span></div>
+      <div className="achievement-next__copy"><span>Next card to unlock</span><strong>{next.badge.label}</strong><p>{remaining} more {nextUnit}{remaining === 1 ? '' : 's'} to collect the {next.meta.rank} of spades.</p></div>
+      <div className="achievement-next__progress"><span>{next.current} <span>/ {next.meta.target}</span></span><div role="progressbar" aria-label={`Progress toward ${next.badge.label}`} aria-valuemin={0} aria-valuemax={next.meta.target} aria-valuenow={next.current}><i style={{ width:`${next.ratio * 100}%` }} /></div></div>
+    </div> : badges.length > 0 && earned === badges.length && <div className="achievement-next achievement-next--complete"><span aria-hidden="true">♠</span><div><strong>The deck is complete.</strong><p>Every milestone collected. There are still more stories to keep.</p></div></div>}
+    {newlyEarned.length > 0 && <p className="achievement-unlock" role="status">Newly collected: {badges.filter(badge => newlyEarned.includes(badge.id)).map(badge => `${badge.label} · ${MILESTONES[badge.id]?.rank || 'New card'} of spades`).join(', ')}.</p>}
     <div className="achievement-section__toolbar">
       <div className="achievement-filters" role="group" aria-label="Filter achievements">{filters.map(item => <button type="button" key={item.id} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}<span>{item.count}</span></button>)}</div>
       <span className="achievement-section__instruction">Ace to King. Turn a card to discover more. <span aria-hidden="true">↗</span></span>
@@ -61,7 +100,7 @@ const AchievementCollection = ({ analytics }) => {
     <div className="achievement-grid" aria-live="polite">
       {visible.map(badge => {
         const meta = MILESTONES[badge.id] || { ...MILESTONES['first-place'], category: 'A moment to keep', target: null }
-        return <FlipCard key={badge.id} className={`milestone-card milestone-card--${meta.rank.toLowerCase()} ${badge.earned ? 'is-earned' : 'is-locked'}`}
+        return <FlipCard key={badge.id} className={`milestone-card milestone-card--${meta.rank.toLowerCase()} ${badge.earned ? 'is-earned' : 'is-locked'}${newlyEarned.includes(badge.id) ? ' is-unlocking' : ''}`}
           front={<img className="milestone-card__artwork" src={`${process.env.PUBLIC_URL}/images/achievements/${meta.artwork}`} alt={`${meta.rank} of spades`} style={{ filter: `url(#${artworkFilterId})` }} loading="lazy" draggable={false} />}
           back={<div className="milestone-back">
             <div className="milestone-back__top"><span>{meta.rank} of spades</span><StatusIcon earned={badge.earned} /></div>

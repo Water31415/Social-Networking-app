@@ -12,7 +12,8 @@ const translateText = async (req,res,next) => {
             q:req.body.text,
             target:req.body.target,
             format:'text'
-        },{params:{key:apiKey}})
+        },{params:{key:apiKey},timeout:10000})
+        if (typeof response.data?.data?.translations?.[0]?.translatedText !== 'string') throw new Error('Invalid translation response')
         res.json({translatedText:response.data.data.translations[0].translatedText})
     } catch(error) {
         return next(new HttpError('Google Translate could not translate this text',502))

@@ -1,0 +1,12 @@
+**/node_modules/
+Frontend/build/
+**/.env
+**/.env.*
+!**/.env*.example
+Backend/uploads/
+**/*.log
+coverage/
+.snapit-*
+.DS_Store
+Thumbs.db
+**/*Zone.Identifier*

@@ -82,6 +82,7 @@ html {
   overflow-x: clip;
   scrollbar-color: var(--text-secondary) var(--app-background);
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
 
 body {

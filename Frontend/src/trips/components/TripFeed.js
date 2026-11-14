@@ -14,6 +14,7 @@ export const TripFeedCard = ({ trip }) => {
   const auth = useContext(AuthContext)
   const { sendRequest } = useHttpClient()
   const commentInputRef = useRef(null)
+  const translationSequence = useRef(0)
   const id = trip.id || trip._id
   const [likes, setLikes] = useState(trip.likes || [])
   const [comments, setComments] = useState(trip.comments || [])
@@ -80,16 +81,17 @@ export const TripFeedCard = ({ trip }) => {
 
   const translateTitle = async event => {
     const target = event.target.value
+    const requestId = ++translationSequence.current
     setLanguage(target)
     setTranslatedTitle('')
     setTranslateError('')
-    if (!target) return
+    if (!target) { setIsTranslating(false); return }
     setIsTranslating(true)
     try {
       const result = await sendRequest(backendUrl('api/translate'), 'POST', JSON.stringify({ text: trip.title, target }), { 'Content-Type': 'application/json' })
-      setTranslatedTitle(result.translatedText)
-    } catch (error) { setTranslateError(error.message || 'Could not translate this trip.') }
-    finally { setIsTranslating(false) }
+      if (requestId === translationSequence.current) setTranslatedTitle(result.translatedText)
+    } catch (error) { if (requestId === translationSequence.current) setTranslateError(error.message || 'Could not translate this trip.') }
+    finally { if (requestId === translationSequence.current) setIsTranslating(false) }
   }
 
   return <article className="trip-feed__post">

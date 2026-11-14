@@ -69,10 +69,14 @@
   transform: translateX(-50%);
 }
 
-.morph-slider-caption { position: absolute; z-index: 2; left: 22px; bottom: 22px; max-width: 70%; pointer-events: none; }
+.morph-slider-caption { position: absolute; z-index: 2; left: 22px; bottom: 22px; max-width: 70%; overflow:hidden; pointer-events: none; }
 
 .morph-slider-caption-text {
-  display: inline-block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   padding: 8px 14px;
   border-radius: 10px;
   color: #fff;

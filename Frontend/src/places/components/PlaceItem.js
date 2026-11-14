@@ -5,6 +5,7 @@ import Button from '../../shared/components/FormElements/Button'
 import Modal from '../../shared/components/UIElements/Modal'
 import Map from '../../shared/components/UIElements/Map'
 import GoogleSearchButton from '../../shared/components/UIElements/GoogleSearchButton'
+import SavePlaceButton from './SavePlaceButton'
 import { AuthContext } from '../../shared/components/context/auth-context'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import ErrorModal from '../../shared/components/UIElements/ErrorModal'
@@ -30,6 +31,7 @@ const PlaceItem=props=>{
     const [translateError,setTranslateError]=useState('')
     const [shareError,setShareError]=useState('')
     const commentInputRef=useRef(null)
+    const translationSequence = useRef(0)
     const handleMediaHeightChange=useCallback(height=>setMediaHeight(height),[])
     const photos=useMemo(()=>props.images && props.images.length ? props.images : [props.image], [props.images,props.image])
     const photoSlides=useMemo(()=>photos.filter(Boolean).map((photo,index)=>({
@@ -71,6 +73,7 @@ const PlaceItem=props=>{
     }
     const translate=async event=>{
         const target=event.target.value
+        const requestId=++translationSequence.current
         setLanguage(target)
         setTranslated(null)
         setTranslateError('')
@@ -79,13 +82,14 @@ const PlaceItem=props=>{
             const fields=await Promise.all([props.title,props.address,props.description].map(text=>
                 sendRequest(backendUrl('api/translate'),'POST',JSON.stringify({text,target}),{'Content-Type':'application/json'})
             ))
-            setTranslated(fields.map(field=>field.translatedText))
-        } catch(error) { setTranslateError(error.message) }
+            if(requestId===translationSequence.current) setTranslated(fields.map(field=>field.translatedText))
+        } catch(error) { if(requestId===translationSequence.current) setTranslateError(error.message) }
     }
     const confirmDelete=async()=>{
         setShowDeleteWarning(false)
         try {
             await sendRequest(backendUrl(`api/places/${props.id}`),'DELETE',null,{Authorization:`Bearer ${auth.token}`})
+            window.dispatchEvent(new CustomEvent('snapit:place-deleted', { detail:{ id:String(props.id) } }))
             props.onDelete?.(props.id)
         } catch(error) {}
     }
@@ -103,14 +107,15 @@ const PlaceItem=props=>{
                 <div className={`place-item__layout${showDetails?' is-expanded':''}`}>
                     <div className="place-item__media">
                         <MorphSlider items={photoSlides} label={`Photos of ${props.title}`} onSelect={props.initiallyExpanded ? undefined : ()=>setShowDetails(current=>!current)} onHeightChange={handleMediaHeightChange} />
-                        <button className="place-item__open-details" type="button" onClick={()=>setShowDetails(current=>!current)}>
+                        {!props.initiallyExpanded && <button className="place-item__open-details" type="button" onClick={()=>setShowDetails(current=>!current)}>
                             {showDetails ? 'Hide post details' : 'View post details'}
-                        </button>
+                        </button>}
                     </div>
                     {showDetails && <section className="place-item__details" style={mediaHeight ? {'--place-media-height': `${mediaHeight}px`} : undefined} aria-label={`${props.title} details`}>
-                        <button className="place-item__close-details" type="button" onClick={()=>setShowDetails(false)} aria-label="Close post details">×</button>
+                        {!props.initiallyExpanded && <button className="place-item__close-details" type="button" onClick={()=>setShowDetails(false)} aria-label="Close post details">×</button>}
                         <div className="place-item__info">
                             <h2>{translated ? translated[0] : props.title}</h2>
+                            <SavePlaceButton place={props.placeRecord || { id:props.id, title:props.title, description:props.description, address:props.address, images:photos, location:props.coordinates, creatorName:props.creatorName, creator:props.creator, likes:props.likes, comments:props.comments, shareCount:props.shareCount }} />
                             {props.creatorName && <p className="place-item__creator">Posted by <strong>{props.creatorName}</strong></p>}
                             <h3>{translated ? translated[1] : props.address}</h3>
                             <p>{translated ? translated[2] : props.description}</p>

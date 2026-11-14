@@ -55,7 +55,8 @@
 .trip-stop-card__images { display:grid; min-width:0; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; gap:.4rem; }
 .trip-stop-card__images img:only-child { grid-column:1/-1; }
 .trip-stop-card time,.trip-stop-card small { color:var(--text-secondary,#a6aca3); font:.67rem var(--font-mono,Consolas,monospace); line-height:1.6; }
-.trip-stop-card h3 { margin:.4rem 0 .6rem; font-family:var(--font-display,Georgia,'Times New Roman',serif); font-size:1.65rem; font-weight:400; }
+.trip-stop-card h3 { margin:.4rem 0 .6rem; font-family:var(--font-display,Georgia,'Times New Roman',serif); font-size:1.65rem; font-weight:400; overflow-wrap:anywhere; }
+.trip-stop-card > div { min-width:0; }
 .trip-stop-card p { margin:.4rem 0; color:var(--text-secondary,#a6aca3); font-size:.85rem; line-height:1.7; overflow-wrap:anywhere; }
 .trip-review-link { justify-self:end; }
 

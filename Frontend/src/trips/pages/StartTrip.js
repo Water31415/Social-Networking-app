@@ -7,6 +7,7 @@ import { backendUrl } from '../../shared/Utils/backend-url'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import ErrorModal from '../../shared/components/UIElements/ErrorModal'
 import { fetchCurrentLocation } from '../../shared/Utils/current-location'
+import { saveDraft, removeDraft, loadTripDraft } from '../../shared/Utils/draft-storage'
 import './TripPages.css'
 
 const StartTrip = () => {
@@ -22,21 +23,14 @@ const StartTrip = () => {
   const [geoError, setGeoError] = useState('')
   const [addressFetched, setAddressFetched] = useState(false)
   const skipActiveTripRedirect = useRef(false)
+  const submissionPending = useRef(false)
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(storageKey) || 'null')
-      if (saved) {
-        const savedForm = saved.form || saved
-        const { startAddressFetched: wasFetched, ...restoredForm } = savedForm
-        const hadFetchedLocation = wasFetched === true || Boolean(savedForm.startLocation)
-        setForm(current => ({ ...current, ...restoredForm, startAddress: hadFetchedLocation ? '' : (savedForm.startAddress || ''), startLocation: null }))
-      }
-    } catch {}
+    setForm(loadTripDraft(storageKey))
     setDraftLoaded(true)
   }, [storageKey])
   useEffect(() => {
     if (!draftLoaded) return
-    localStorage.setItem(storageKey, JSON.stringify({
+    saveDraft(storageKey, JSON.stringify({
       ...form,
       startAddress: addressFetched ? '' : form.startAddress,
       startLocation: null,
@@ -64,6 +58,8 @@ const StartTrip = () => {
   }
   const submit = async event => {
     event.preventDefault()
+    if (submissionPending.current || !form.title.trim()) return
+    submissionPending.current = true
     setIsSubmitting(true)
     try {
       const payload = { ...form, plannedBudget: Number(form.plannedBudget || 0), itinerary: form.itinerary.filter(item => item.plannedPlace.trim()).map(item => ({ ...item, day: Math.max(1, Number(item.day) || 1) })) }
@@ -71,10 +67,10 @@ const StartTrip = () => {
       const trip = response.trip
       skipActiveTripRedirect.current = true
       setActiveTrip(trip)
-      localStorage.removeItem(storageKey)
+      removeDraft(storageKey)
       history.push({ pathname: '/', state: { postSubmitLoadingText: 'your trip' } })
       refreshActiveTrip().catch(() => {})
-    } catch {} finally { setIsSubmitting(false) }
+    } catch {} finally { submissionPending.current = false; setIsSubmitting(false) }
   }
   return <main className="trip-page">
     <ErrorModal error={error} onClear={clearError} />

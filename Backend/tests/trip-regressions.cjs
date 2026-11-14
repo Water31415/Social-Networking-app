@@ -12,26 +12,43 @@ const backendRoot = path.join(projectRoot, 'Backend');
 const controllerPath = path.join(backendRoot, 'controllers', 'trips-controller.js');
 const controllerSource = fs.readFileSync(controllerPath, 'utf8');
 
-function makeControllerHarness({ geocodingFails = false } = {}) {
-  class HttpError extends Error {
-    constructor(message, code) {
-      super(message);
-      this.code = code;
-    }
-  }
+function makeControllerHarness({ geocodingFails = false, summaryFails = false, linkSaveFails = false } = {}) {
+  const HttpError = require('../models/http-error');
 
   const unlinks = [];
   const geocodes = [];
   const saves = { trip: 0, stop: 0 };
+  const deleted = [];
   const trip = {
     _id: 'trip',
     creator: 'owner',
     status: 'completed',
     startedAt: new Date('2026-10-28T09:00:00.000Z'),
-    stops: { pull: () => {} },
-    save: async () => { saves.trip++; },
+    stops: { pull: () => {}, addToSet: () => {} },
+    save: async () => {
+      saves.trip++;
+      if (linkSaveFails) throw new Error('Trip link save failed');
+    },
     deleteOne: async () => {},
   };
+  function TripModel(data) { return Object.assign(trip, data); }
+  TripModel.findById = async () => trip;
+  TripModel.findOne = async () => null;
+  TripModel.findByIdAndDelete = async id => { deleted.push(['trip', id]); };
+  function StopModel(data) { return Object.assign(stop, data); }
+  Object.assign(StopModel, {
+    findOne: async () => stop,
+    findOneAndDelete: async () => stop,
+    findByIdAndDelete: async id => { deleted.push(['stop', id]); },
+    deleteMany: async () => {},
+    find: () => ({
+      sort: async () => {
+        if (summaryFails) throw new Error('Summary read failed');
+        return [stop];
+      },
+      then: (resolve, reject) => Promise.resolve([stop]).then(resolve, reject),
+    }),
+  });
   const stop = {
     _id: 'stop',
     title: 'Original stop',
@@ -59,18 +76,12 @@ function makeControllerHarness({ geocodingFails = false } = {}) {
     path,
     'express-validator': { validationResult: () => ({ isEmpty: () => true }) },
     '../models/http-error': HttpError,
-    '../models/trip': { findById: async () => trip },
-    '../models/trip-stop': {
-      findOne: async () => stop,
-      findOneAndDelete: async () => stop,
-      deleteMany: async () => {},
-      find: () => ({
-        sort: async () => [stop],
-        then: (resolve, reject) => Promise.resolve([stop]).then(resolve, reject),
-      }),
-    },
-    '../models/user': { findById: async () => null },
+    '../models/trip': TripModel,
+    '../models/trip-stop': StopModel,
+    '../models/user': { findById: async () => ({ trips: { addToSet: () => {}, pull: () => {} }, save: async () => {} }) },
     '../utils/location': geocode,
+    '../utils/upload-path': require('../utils/upload-path'),
+    '../utils/request-input': require('../utils/request-input'),
   };
   const controller = {};
   vm.runInNewContext(controllerSource, {
@@ -94,13 +105,39 @@ function makeControllerHarness({ geocodingFails = false } = {}) {
       body,
       ...extras,
     }, {
+      status() { return this; },
       json: data => { result.data = data; },
     }, error => { result.error = error; });
     return result;
   };
 
-  return { updateStop: body => invoke('updateStop', body), invoke, stop, trip, saves, unlinks, geocodes };
+  return { updateStop: body => invoke('updateStop', body), invoke, stop, trip, saves, unlinks, geocodes, deleted };
 }
+
+test('a response summary failure never deletes a trip or stop that was already saved', async t => {
+  for (const method of ['startTrip', 'addStop']) {
+    await t.test(method, async () => {
+      const harness = makeControllerHarness({ summaryFails: true });
+      harness.trip.status = 'active';
+      const result = await harness.invoke(method, { title: 'Test', browserLocation: { lat: 12, lng: 77 } }, { files: [{ filename: 'new.png' }] });
+      assert.match(result.error.message, /Summary read failed/);
+      assert.deepEqual(harness.deleted, []);
+      assert.ok(harness.saves.trip > 0);
+    });
+  }
+});
+
+test('failed persistence still cleans up an uncommitted trip or stop', async t => {
+  for (const method of ['startTrip', 'addStop']) {
+    await t.test(method, async () => {
+      const harness = makeControllerHarness({ linkSaveFails: true });
+      harness.trip.status = 'active';
+      const result = await harness.invoke(method, { title: 'Test', browserLocation: { lat: 12, lng: 77 } }, { files: [{ filename: 'new.png' }] });
+      assert.ok(result.error);
+      assert.deepEqual(harness.deleted, [method === 'startTrip' ? ['trip', 'trip'] : ['stop', 'stop']]);
+    });
+  }
+});
 
 test('retained image paths cannot schedule deletion of backend application files', async () => {
   const harness = makeControllerHarness();
@@ -317,4 +354,38 @@ test('an unavailable or malformed stored visited time renders safely', () => {
   for (const value of ['', null, undefined, 'invalid-date']) {
     assert.equal(makeVisitedTimeHarness(value).displayed, '');
   }
+});
+
+test('invalid stop expenses return 422 without saving the stop', async () => {
+  for (const expenses of ['{broken', '{}', '[null]', '[{"amount":-1}]', '[{"amount":""}]']) {
+    const harness = makeControllerHarness();
+    const result = await harness.updateStop({ expenses });
+    assert.equal(result.error.code, 422);
+    assert.equal(harness.saves.stop, 0);
+  }
+});
+
+test('blank titles and non-text stop fields are rejected without persisting', async () => {
+  for (const body of [{ title: '' }, { title: {} }, { note: {} }, { address: [] }]) {
+    const harness = makeControllerHarness();
+    const result = await harness.updateStop(body);
+    assert.equal(result.error.code, 422);
+    assert.equal(harness.saves.stop, 0);
+  }
+});
+
+test('editing a stop cannot exceed the ten-photo limit', async () => {
+  const harness = makeControllerHarness();
+  harness.stop.images = Array.from({ length: 10 }, (_, i) => `/uploads/images/photo${i}.png`);
+  const result = await harness.invoke('updateStop', {}, { files: [{ filename: 'extra.png' }] });
+  assert.equal(result.error.code, 422);
+  assert.equal(harness.saves.stop, 0);
+});
+
+test('invalid itinerary JSON is a client error before a trip is saved', async () => {
+  const harness = makeControllerHarness();
+  harness.trip.plannedBudget = 0;
+  const result = await harness.invoke('updateTrip', { itinerary: '{broken' });
+  assert.equal(result.error.code, 422);
+  assert.equal(harness.saves.trip, 0);
 });

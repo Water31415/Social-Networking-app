@@ -18,25 +18,24 @@
   "author": "SARTHAK",
   "main": "index.js",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "vite --host localhost --port 3000 --strictPort",
+    "build": "npm run lint && vite build",
+    "lint": "eslint src --max-warnings 0",
     "test": "node --test ../Backend/tests/frontend-regressions.cjs",
-    "eject": "react-scripts eject"
+    "preview": "vite preview --host localhost --port 3000 --strictPort"
   },
   "dependencies": {
     "gsap": "^3.15.0",
     "leaflet": "^1.9.4",
     "motion": "^14.3.0",
-    "nodemon": "^3.1.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^5.3.4",
-    "react-scripts": "^5.0.1",
     "react-transition-group": "^4.4.5"
   },
-  "eslintConfig": {
-    "extends": "react-app"
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "browserslist": {
     "production": [
@@ -49,5 +48,22 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.13",
+    "@babel/parser": "^7.29.14",
+    "@babel/preset-env": "^7.29.14",
+    "@babel/preset-react": "^7.29.7",
+    "@eslint/js": "^9.39.5",
+    "@vitejs/plugin-react": "^6.3.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "jsdom": "^31.0.1",
+    "vite": "^8.3.8"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.2.19"
   }
 }

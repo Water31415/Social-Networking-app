@@ -169,6 +169,7 @@ const PlaceList = props=>{
             {selectedItem?.type === 'trip' ? <TripFeedCard key={selectedItem.key} trip={selectedItem.data} /> : selectedItem && <PlaceItem
                 key={selectedItem.key}
                 id={selectedItem.data.id}
+                placeRecord={selectedItem.data}
                 image={selectedItem.data.image}
                 images={selectedItem.data.images}
                 title={selectedItem.data.title}

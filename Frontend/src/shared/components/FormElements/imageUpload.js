@@ -10,19 +10,29 @@ const ImageUpload = props =>{
     
 useEffect(()=>{
     if (!file.length) {
-        return
+        setPreviewUrl(null)
+        return undefined
     }
-    const urls=[]
+    setPreviewUrl(null)
+    const urls=new Array(file.length)
+    const readers=[]
+    let cancelled=false
     let completed=0
-    file.forEach(image=>{
+    file.forEach((image,index)=>{
         const fileReader = new FileReader()
+        readers.push(fileReader)
         fileReader.onload=()=>{
-            urls.push(fileReader.result)
+            if (cancelled) return
+            urls[index]=fileReader.result
             completed+=1
             if(completed===file.length) setPreviewUrl(urls)
         }
         fileReader.readAsDataURL(image)
     })
+    return ()=>{
+        cancelled=true
+        readers.forEach(reader=>{ reader.onload=null; if(reader.readyState===FileReader.LOADING) reader.abort() })
+    }
 },[file])
     
     const pickHandler= event=>{
@@ -42,6 +52,8 @@ useEffect(()=>{
                 setIsValid(false)
             }
         }else{
+            setFile([])
+            setPreviewUrl(null)
             setIsValid(false)
             fileIsValid=false
         }
@@ -63,7 +75,7 @@ useEffect(()=>{
              />
             <div className={`image-upload ${props.center &&'center'}`} >
             <div className={`image-upload__preview ${props.multiple ? 'image-upload__preview--multiple' : ''}`}>
-                {previewUrl && previewUrl.length>0 && previewUrl.map((url,index)=><img key={url} src={url} alt={`Preview ${index+1}`} />)}
+                {previewUrl && previewUrl.length>0 && previewUrl.map((url,index)=><img key={index} src={url} alt={`Preview ${index+1}`} />)}
                 {!previewUrl && <p>{props.multiple ? 'Pick up to 10 photos' : 'Pick an image'}</p>}
             </div>
             <Button type="button" onClick={pickImageHandler} >PICK IMAGE</Button>

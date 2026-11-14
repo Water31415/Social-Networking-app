@@ -1,4 +1,4 @@
-import React,{useContext,useEffect,useMemo,useState} from 'react'
+import React,{useContext,useEffect,useMemo,useRef,useState} from 'react'
 import { Link } from 'react-router-dom'
 import { AuthContext } from '../../shared/components/context/auth-context'
 import { useHttpClient } from '../../shared/hooks/http-hook'
@@ -41,7 +41,20 @@ const Dashboard=()=>{
     const [analytics,setAnalytics]=useState(null)
     const [places,setPlaces]=useState([])
     const [monthRange,setMonthRange]=useState(6)
+    const analyticsVersion = useRef(0)
+    useEffect(() => {
+        const update = event => {
+            if (event.detail?.userId === auth.userId && event.detail.analytics) {
+                analyticsVersion.current++
+                setAnalytics(event.detail.analytics)
+            }
+        }
+        window.addEventListener('snapit:analytics-updated', update)
+        return () => window.removeEventListener('snapit:analytics-updated', update)
+    }, [auth.userId])
     useEffect(()=>{
+        let cancelled = false
+        const version = analyticsVersion.current
         const load=async()=>{
             try {
                 const headers={Authorization:`Bearer ${auth.token}`}
@@ -49,11 +62,13 @@ const Dashboard=()=>{
                     sendRequest(backendUrl('api/places/analytics'),'GET',null,headers),
                     sendRequest(backendUrl(`api/places/user/${auth.userId}`),'GET',null,headers)
                 ])
-                setAnalytics(data)
+                if (cancelled) return
+                if (version === analyticsVersion.current) setAnalytics(data)
                 setPlaces((placeData.place || []).map(place=>({...place,id:String(place.id || place._id)})))
             } catch(error) {}
         }
         if(auth.token && auth.userId) load()
+        return () => { cancelled = true }
     },[auth.token,auth.userId,sendRequest])
 
     const monthlyPlaces = useMemo(() => {
@@ -110,7 +125,7 @@ const Dashboard=()=>{
                     return <Card key={key} className="analytics-card">
                         <span className="analytics-card__label">{label}</span>
                         <div className="analytics-card__value-row">
-                            <strong>{Number(analytics[key] || 0).toLocaleString()}</strong>
+                            <strong title={Number(analytics[key] || 0).toLocaleString()}>{Number(analytics[key] || 0).toLocaleString(undefined, { notation:Number(analytics[key]) >= 10000 ? 'compact' : 'standard', maximumFractionDigits:1 })}</strong>
                             <Sparkline values={values} label={`${label} by ${series === 'monthly' ? 'month' : 'place'}`}/>
                         </div>
                         <span className="analytics-card__caption">All-time total</span>

@@ -1,0 +1,26 @@
+name: Test and build
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            Backend/package-lock.json
+            Frontend/package-lock.json
+      - run: npm --prefix Backend ci
+      - run: npm --prefix Frontend ci
+      - run: npm test
+      - run: npm run test:api
+      - run: npm run build
+      - run: npm run test:production
+      - run: docker build -t snapit:ci .

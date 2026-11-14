@@ -12,6 +12,7 @@ const NavIcon = ({name}) => {
         'SHOW ALL PLACES':<><circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.2 5-5 2.2 2.2-5 5-2.2Z"/></>,
         'ADD PLACE':<><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="5"/></>,
         'DASHBOARD':<><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7 15v-3m5 3V7m5 8v-5"/></>,
+        'SAVED PLACES':<path d="M6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17l-6-4-6 4V4Z"/>,
         'AUTHENTICATE':<><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
         'LOGOUT':<><path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></>
     };
@@ -24,7 +25,7 @@ const NavLinks = props =>{
     const history=useHistory()
     const [nearbyActive,setNearbyActive]=useState(false)
     const createPanelOpen=location.pathname==='/' && new URLSearchParams(location.search).get('create')==='1'
-    const captions = {'MY PLACES':'My places','FIND NEAR ME':'Nearby','SHOW ALL PLACES':'Explore','ADD PLACE':'New entry','DASHBOARD':'Field notes','AUTHENTICATE':'Join in','LOGOUT':'Sign out'}
+    const captions = {'MY PLACES':'My places','SAVED PLACES':'Saved','FIND NEAR ME':'Nearby','SHOW ALL PLACES':'Explore','ADD PLACE':'New entry','DASHBOARD':'Field notes','AUTHENTICATE':'Join in','LOGOUT':'Sign out'}
 
     useEffect(()=>{
         const handleNearbyState=event=>setNearbyActive(Boolean(event.detail && event.detail.active))
@@ -41,6 +42,7 @@ const NavLinks = props =>{
         {label:'MY PLACES',to:`/${auth.userId}/places`,exact:true},
         {label:'ADD PLACE',action:true,active:createPanelOpen,onClick:()=>history.push(createPanelOpen?'/':'/?create=1')},
         {label:'DASHBOARD',to:'/dashboard'},
+        {label:'SAVED PLACES',to:'/saved'},
         {label:'LOGOUT',onClick:auth.logout}
     )
     else items.push({label:'AUTHENTICATE',to:'/auth'})

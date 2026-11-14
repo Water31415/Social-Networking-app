@@ -55,7 +55,7 @@ function controllerHarness(environment, options = {}) {
   let databaseCalls = 0;
   class User {
     constructor(data) { Object.assign(this, data); this.id = 'new-user'; }
-    async save() { databaseCalls++; }
+    async save() { databaseCalls++; if (options.saveError) throw options.saveError; }
     static async findOne() {
       databaseCalls++;
       if (options.existingUser === false) return null;
@@ -81,6 +81,8 @@ function startupHarness(options = {}) {
   const config = environmentHarness(environment);
   const app = {
     middleware: [],
+    disable() {},
+    get() {},
     use(...handlers) { this.middleware.push(...handlers); },
     listen() {
       events.push('listen');
@@ -116,6 +118,7 @@ function startupHarness(options = {}) {
       if (options.initError) throw options.initError;
       if (options.indexReady) await options.indexReady;
     } },
+    './config/frontend': () => {},
   }, environment);
   return { ...exported, events, config };
 }
@@ -127,6 +130,12 @@ test('environment file is anchored to Backend rather than the launch directory',
   assert.equal(config.configCalls[0].quiet, true);
 });
 
+test('production uses its own environment file without changing the development configuration', () => {
+  const config = environmentHarness({ NODE_ENV:'production' });
+  config.loadEnvironment();
+  assert.equal(config.configCalls[0].path, path.join(backendRoot,'.env.production'));
+});
+
 test('missing startup configuration fails without revealing configured values', () => {
   const config = environmentHarness({ DATABASE_API_KEY: 'private-database-uri', JWT_API_KEY: '   ' });
   assert.throws(() => config.validateStartupEnvironment(), error => {
@@ -134,6 +143,26 @@ test('missing startup configuration fails without revealing configured values', 
     assert.doesNotMatch(error.message, /private-database-uri/);
     return true;
   });
+});
+
+test('production rejects short signing secrets while local development remains configurable', () => {
+  const production = environmentHarness({ NODE_ENV:'production', DATABASE_API_KEY:'database', JWT_API_KEY:'short' });
+  assert.throws(() => production.validateStartupEnvironment(), /at least 32 characters/);
+  assert.equal(environmentHarness({ JWT_API_KEY:'local-test-secret' }).getJwtSecret(), 'local-test-secret');
+  assert.equal(environmentHarness({ NODE_ENV:'production', JWT_API_KEY:'x'.repeat(32) }).getJwtSecret().length, 32);
+});
+
+test('production error responses hide unexpected internals and preserve operational errors', () => {
+  const harness = startupHarness({ environment:{ NODE_ENV:'production' } });
+  const handler = harness.app.middleware.at(-1);
+  let status, body;
+  const response = { status(code) { status = code; return this; }, json(data) { body = data; } };
+  handler(new Error('internal database credential detail'), {}, response, () => {});
+  assert.equal(status, 500);
+  assert.doesNotMatch(body.message, /credential|database/);
+  handler(new HttpError('Location service is not configured',503), {}, response, () => {});
+  assert.equal(status, 503);
+  assert.equal(body.message, 'Location service is not configured');
 });
 
 test('optional database DNS changes only the injected process resolver', () => {
@@ -304,4 +333,154 @@ test('error middleware forwards errors after response headers have been sent', (
     status() { throw new Error('Cannot write a second response'); },
   }, error => { forwarded = error; });
   assert.equal(forwarded, original);
+});
+
+function placesHarness() {
+  const unlinks = [];
+  const place = { creator: { id: 'owner', toString: () => 'owner', places: { pull() {} }, async save() {} },
+    images: ['/uploads/images/photo.png', 'app.js', '/uploads/images/../../../app.js', 'uploads\\images\\..\\app.js'], async deleteOne() {} };
+  const query = { populate() { return this; }, then: (resolve, reject) => Promise.resolve(place).then(resolve, reject) };
+  const controller = loadIsolated('controllers/places-controller.js', {
+    fs: { unlink: (file, callback) => { unlinks.push(file); callback(null); } },
+    mongoose: { startSession: async () => ({ startTransaction() {}, async commitTransaction() {}, async abortTransaction() {}, async endSession() {} }) },
+    'express-validator': { validationResult: () => ({ isEmpty: () => true }) },
+    '../models/http-error': HttpError, '../utils/location': async () => ({ lat: 1, lng: 2 }),
+    '../utils/upload-path': backendRequire('./utils/upload-path'), '../utils/request-input': backendRequire('./utils/request-input'),
+    '../models/places': { findById: () => query }, '../models/user': {},
+  });
+  const invoke = async (action, userId = 'owner') => {
+    const result = {};
+    const res = { status() { return this; }, json: data => { result.data = data; } };
+    await controller[action]({ params: { pid: 'place' }, userData: { userId }, body: { title: 'Title', description: 'Description' } }, res, error => { result.error = error; });
+    return result;
+  };
+  return { invoke, unlinks };
+}
+
+test('place deletion removes legitimate uploads and never resolves stored paths outside images', async () => {
+  const harness = placesHarness();
+  const result = await harness.invoke('deletePlace');
+  assert.equal(result.error, undefined);
+  assert.deepEqual(harness.unlinks, [path.join(backendRoot, 'uploads', 'images', 'photo.png')]);
+});
+
+test('editing and deleting someone else’s place are permission errors rather than expired sessions', async () => {
+  const harness = placesHarness();
+  for (const action of ['updatePlace', 'deletePlace']) {
+    const result = await harness.invoke(action, 'another-user');
+    assert.equal(result.error.code, 403);
+    assert.notEqual(result.error.message, 'Authentication failed');
+  }
+  assert.deepEqual(harness.unlinks, []);
+});
+
+test('public user listing projects only public profile data', async () => {
+  const user = { name: 'Traveler', image: '/uploads/images/profile.png', places: [], email: 'private@example.invalid', password: 'hash', trips: ['private-trip'], followers: [], following: [] };
+  const dependencies = {
+    '../models/http-error': HttpError,
+    '../models/user': { find: async (_, projection) => [{ toObject: () => {
+      const keys = projection.startsWith('-') ? Object.keys(user).filter(key => !projection.split(' ').includes('-' + key)) : projection.split(' ');
+      return Object.fromEntries(keys.map(key => [key, user[key]]));
+    } }] },
+    'express-validator': {}, bcryptjs: {}, jsonwebtoken: {}, '../config/environment': {},
+  };
+  const controller = loadIsolated('controllers/user-controllers.js', dependencies);
+  let response;
+  const res = { status() { return this; }, json: data => { response = data; } };
+  await controller.getUser({}, res, error => { throw error; });
+  assert.equal(response.users[0].name, 'Traveler');
+  for (const key of ['email', 'password', 'trips', 'followers', 'following']) assert.equal(key in response.users[0], false);
+});
+
+test('signup reports existing email and unique-name collisions as HTTP 409', async () => {
+  for (const options of [{}, { existingUser: false, saveError: { code: 11000 } }]) {
+    const harness = controllerHarness({ JWT_API_KEY: 'test-secret' }, options);
+    let error;
+    await harness.controller.signUp({ body: { name: 'Test', email: 'test@example.invalid', password: 'password' }, file: { filename: 'photo.png' } }, {}, value => { error = value; });
+    assert.equal(error.code, 409);
+  }
+});
+
+test('invalid database field values return a client error without internal model details', () => {
+  const handler = startupHarness().app.middleware.at(-1);
+  for (const name of ['ValidationError', 'CastError']) {
+    let status, body;
+    const res = { status: value => { status = value; return res; }, json: value => { body = value; } };
+    handler({ name, message: 'internal collection and field details' }, {}, res, error => { throw error; });
+    assert.equal(status, 422);
+    assert.doesNotMatch(body.message, /internal collection/);
+  }
+});
+
+test('file upload size/count errors are HTTP 400 rather than server errors', () => {
+  const handler = startupHarness().app.middleware.at(-1);
+  for (const code of ['LIMIT_FILE_SIZE', 'LIMIT_UNEXPECTED_FILE']) {
+    let status;
+    const res = { status: value => { status = value; return res; }, json() {} };
+    handler({ name: 'MulterError', code, message: 'Upload rejected' }, {}, res, error => { throw error; });
+    assert.equal(status, 400);
+  }
+});
+
+test('response errors preserve uploaded photos already referenced by saved records', () => {
+  const handler = startupHarness().app.middleware.at(-1);
+  let status;
+  const res = { status(value) { status = value; return this; }, json() {} };
+  // The harness throws if fs.unlink is called, so a saved photo must be retained.
+  handler(new Error('Response read failed'), { uploadsCommitted: true, files: [{ path: 'saved-photo.png' }] }, res, error => { throw error; });
+  assert.equal(status, 500);
+});
+
+test('coordinate validation rejects blank/null/boolean values while accepting zero coordinates', () => {
+  const { validCoords, readPoint } = backendRequire('./utils/request-input');
+  for (const value of ['', ' ', null, undefined, false, [], {}]) assert.ok(!validCoords({ lat: value, lng: 10 }));
+  assert.ok(validCoords({ lat: 0, lng: '0' }));
+  assert.deepEqual(readPoint('{"lat":0,"lng":0}'), { lat: 0, lng: 0 });
+  for (const value of ['{bad', '{"lat":null,"lng":0}', { lat: 91, lng: 0 }]) assert.throws(() => readPoint(value), error => error.code === 422);
+});
+
+test('geocoding requests have bounded timeouts and normalize provider coordinates', async () => {
+  const calls = [];
+  const locate = loadIsolated('utils/location.js', {
+    axios: { get: async (url, config) => {
+      calls.push({ url, config });
+      return { data: url.endsWith('/reverse') ? { display_name: 'Test address' } : [{ lat: '0', lon: '77' }] };
+    } },
+    '../models/http-error': HttpError,
+    './request-input': backendRequire('./utils/request-input'),
+  }, { MAP_API_KEY: 'fixture-key' });
+  const point = await locate(' Test address ');
+  assert.deepEqual({ ...point }, { lat: 0, lng: 77 });
+  assert.equal(await locate.getAddressForCoords(point), 'Test address');
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    assert.equal(call.config.timeout, 10000);
+    assert.equal(call.config.params.key, 'fixture-key');
+    assert.ok(!call.url.includes('fixture-key'));
+  }
+});
+
+test('geocoding provider errors become readable client errors without leaking raw details', async () => {
+  const dependencies = {
+    axios: { get: async () => { throw new Error('private-provider-details'); } },
+    '../models/http-error': HttpError,
+    './request-input': backendRequire('./utils/request-input'),
+  };
+  const locate = loadIsolated('utils/location.js', dependencies, { MAP_API_KEY: 'fixture-key' });
+  await assert.rejects(locate('Test address'), error => error.code === 502 && !error.message.includes('private-provider-details'));
+  await assert.rejects(locate.getAddressForCoords({ lat: 0, lng: 0 }), error => error.code === 502);
+  const unconfigured = loadIsolated('utils/location.js', dependencies);
+  await assert.rejects(unconfigured('Test address'), error => error.code === 503);
+});
+
+test('malformed itinerary, expenses and visited dates produce HTTP 422', () => {
+  const { readExpenses, readItinerary, readVisitedAt } = backendRequire('./utils/request-input');
+  for (const value of ['{bad', '{}', null, [null], [{ amount: '' }], [{ amount: -1 }], [{ amount: true }]]) {
+    assert.throws(() => readExpenses(value), error => error.code === 422);
+  }
+  for (const value of ['{bad', {}, null, [{ day: 0, plannedPlace: 'Place' }], [{ day: 1.5, plannedPlace: 'Place' }], [{ day: 1, plannedPlace: ' ' }]]) {
+    assert.throws(() => readItinerary(value), error => error.code === 422);
+  }
+  for (const value of ['', null, true, 'not a date']) assert.throws(() => readVisitedAt(value), error => error.code === 422);
+  assert.equal(readExpenses([{ amount: '1.25', category: 'Food' }])[0].amount, 1.25);
 });

@@ -8,6 +8,7 @@ import readExifGps from '../../shared/Utils/exif-gps'
 import { useHttpClient } from '../../shared/hooks/http-hook'
 import ErrorModal from '../../shared/components/UIElements/ErrorModal'
 import { fetchCurrentLocation } from '../../shared/Utils/current-location'
+import { saveDraft, removeDraft, loadStopDraft } from '../../shared/Utils/draft-storage'
 import './TripPages.css'
 
 const ActiveTrip = () => {
@@ -16,16 +17,19 @@ const ActiveTrip = () => {
   const { activeTrip, setActiveTrip } = useTrip()
   const { isLoading, error, clearError, sendRequest } = useHttpClient()
   const history = useHistory()
-  const [trip, setTrip] = useState(activeTrip)
+  const [trip, setTrip] = useState(String(activeTrip?.id || activeTrip?._id) === tripId ? activeTrip : null)
   const [form, setForm] = useState({ title: '', note: '', address: '' })
   const [images, setImages] = useState([])
   const imageInputRef = useRef(null)
+  const imageSelection = useRef(0)
   const [previews, setPreviews] = useState([])
   const [exifLocation, setExifLocation] = useState(null)
   const [browserLocation, setBrowserLocation] = useState(null)
   const [locationLoading, setLocationLoading] = useState(false)
   const [expenses, setExpenses] = useState([{ amount: '', category: 'Other', note: '' }])
   const [draftLoaded, setDraftLoaded] = useState(false)
+  const savingStop = useRef(false)
+  const [isSavingStop, setIsSavingStop] = useState(false)
   const [geoError, setGeoError] = useState('')
   const [itinerary, setItinerary] = useState([])
   const storageKey = `snapit-stop-draft-${tripId}`
@@ -39,10 +43,11 @@ const ActiveTrip = () => {
   }, [sendRequest, tripId, auth.token, history])
   useEffect(() => { loadTrip() }, [loadTrip])
   useEffect(() => {
-    try { const saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); if (saved) { setForm(current => ({ ...current, ...(saved.form || saved) })); if (saved.expenses) setExpenses(saved.expenses) } } catch {}
+    const saved = loadStopDraft(storageKey)
+    setForm(saved.form); setExpenses(saved.expenses)
     setDraftLoaded(true)
   }, [storageKey])
-  useEffect(() => { if (draftLoaded) localStorage.setItem(storageKey, JSON.stringify({ status: 'draft', form, expenses })) }, [storageKey, form, expenses, draftLoaded])
+  useEffect(() => { if (draftLoaded) saveDraft(storageKey, JSON.stringify({ status: 'draft', form, expenses })) }, [storageKey, form, expenses, draftLoaded])
   useEffect(() => { const urls = images.map(file => URL.createObjectURL(file)); setPreviews(urls); return () => urls.forEach(URL.revokeObjectURL) }, [images])
   const change = event => {
     const { name, value } = event.target
@@ -51,10 +56,15 @@ const ActiveTrip = () => {
   }
   const spent = useMemo(() => (trip?.stops || []).reduce((sum, stop) => sum + (stop.expenses || []).reduce((total, expense) => total + Number(expense.amount || 0), 0), 0) + expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0), [trip, expenses])
   const pickImages = async event => {
+    const selection = ++imageSelection.current
     const files = Array.from(event.target.files || []).slice(0, 10)
     setImages(files)
     setExifLocation(null)
-    for (const file of files) { const coords = await readExifGps(file); if (coords) { setExifLocation(coords); break } }
+    for (const file of files) {
+      const coords = await readExifGps(file)
+      if (selection !== imageSelection.current) return
+      if (coords) { setExifLocation(coords); break }
+    }
   }
   const useMyLocation = async () => {
     setGeoError('')
@@ -72,7 +82,9 @@ const ActiveTrip = () => {
   const updateExpense = (index, key, value) => setExpenses(current => current.map((item, i) => i === index ? { ...item, [key]: value } : item))
   const addStop = async event => {
     event.preventDefault()
-    if (!images.length) return
+    if (savingStop.current || !images.length || !form.title.trim() || (!form.address.trim() && !exifLocation && !browserLocation)) return
+    savingStop.current = true
+    setIsSavingStop(true)
     const data = new FormData()
     data.append('title', form.title); data.append('note', form.note); data.append('address', form.address)
     data.append('expenses', JSON.stringify(expenses.filter(item => item.amount !== '').map(item => ({ ...item, amount: Number(item.amount) }))))
@@ -81,16 +93,19 @@ const ActiveTrip = () => {
     images.forEach(file => data.append('images', file))
     try {
       const response = await sendRequest(backendUrl(`api/trips/${tripId}/stops`), 'POST', data, { Authorization: `Bearer ${auth.token}` })
-      setTrip(response.trip); setActiveTrip(response.trip); setForm({ title: '', note: '', address: '' }); setImages([]); setExifLocation(null); setBrowserLocation(null); setGeoError(''); setExpenses([{ amount: '', category: 'Other', note: '' }]); if (imageInputRef.current) imageInputRef.current.value = ''; localStorage.removeItem(storageKey)
-    } catch {}
+      imageSelection.current++
+      setTrip(response.trip); setActiveTrip(response.trip); setForm({ title: '', note: '', address: '' }); setImages([]); setExifLocation(null); setBrowserLocation(null); setGeoError(''); setExpenses([{ amount: '', category: 'Other', note: '' }]); if (imageInputRef.current) imageInputRef.current.value = ''; removeDraft(storageKey)
+    } catch {} finally { savingStop.current = false; setIsSavingStop(false) }
   }
   const stopTrip = async () => {
+    if (savingStop.current) return
     try {
       const response = await sendRequest(backendUrl(`api/trips/${tripId}/stop`), 'PATCH', null, { Authorization: `Bearer ${auth.token}` })
       setTrip(response.trip); setActiveTrip(null); history.push(`/trips/${tripId}/review`)
     } catch {}
   }
   const saveItinerary = async () => {
+    if (savingStop.current) return
     try {
       const data = await sendRequest(backendUrl(`api/trips/${tripId}`), 'PATCH', JSON.stringify({ itinerary: itinerary.filter(item => item.plannedPlace.trim()).map(item => ({ ...item, day: Math.max(1, Number(item.day) || 1) })) }), { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` })
       setTrip(data.trip)
@@ -115,7 +130,7 @@ const ActiveTrip = () => {
           {expenses.map((item, index) => <div className="trip-expense-row" key={index}><input aria-label="Expense amount" type="number" min="0" step=".01" value={item.amount} placeholder="Amount" onChange={event => updateExpense(index, 'amount', event.target.value)} /><select aria-label="Expense category" value={item.category} onChange={event => updateExpense(index, 'category', event.target.value)}><option>Other</option><option>Food</option><option>Transport</option><option>Lodging</option><option>Tickets</option><option>Shopping</option></select><input aria-label="Expense note" value={item.note} placeholder="Note" onChange={event => updateExpense(index, 'note', event.target.value)} /></div>)}
         </div>
         <strong className="trip-budget-live">Live trip spend: {spent.toFixed(2)}</strong>
-        <button className="trip-primary" type="submit" disabled={!form.title.trim() || !images.length || (!form.address.trim() && !exifLocation && !browserLocation) || isLoading}>Save stop</button>
+        <button className="trip-primary" type="submit" disabled={!form.title.trim() || !images.length || (!form.address.trim() && !exifLocation && !browserLocation) || isLoading || isSavingStop}>{isSavingStop ? 'Saving stop…' : 'Save stop'}</button>
       </form>
       <div className="trip-live-details"><h2>Route so far</h2><TripMap stops={trip.stops || []} /><TripItineraryEditor items={itinerary} onChange={setItinerary} /><button className="trip-secondary" type="button" onClick={saveItinerary}>Save itinerary</button><div className="trip-timeline">{[...(trip.stops || [])].sort((a,b) => new Date(a.visitedAt)-new Date(b.visitedAt)).map(stop => <article className="trip-stop-card" key={stop.id || stop._id}><div className="trip-stop-card__images">{stop.images?.map(image => <img src={backendImageUrl(image)} alt="" key={image} />)}</div><div><time>{new Date(stop.visitedAt).toLocaleString()}</time><h3>{stop.title}</h3><p>{stop.address}</p><p>{stop.note}</p><small>Spent: {(stop.expenses || []).reduce((sum, expense) => sum + Number(expense.amount), 0).toFixed(2)}</small></div></article>)}</div><Link className="trip-secondary trip-review-link" to={`/trips/${tripId}/review`}>Review trip</Link></div>
     </section>

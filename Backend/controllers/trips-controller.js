@@ -1,5 +1,4 @@
 const fs = require('fs')
-const path = require('path')
 const { validationResult } = require('express-validator')
 const HttpError = require('../models/http-error')
 const Trip = require('../models/trip')
@@ -8,14 +7,8 @@ const User = require('../models/user')
 const getCoordsForAddress = require('../utils/location')
 const getAddressForCoords = getCoordsForAddress.getAddressForCoords
 
-const uploadDirectory = path.resolve(__dirname, '..', 'uploads', 'images')
-const uploadPath = value => {
-  if (typeof value !== 'string') return null
-  const match = /^\/?uploads\/images\/([^/\\]+)$/.exec(value)
-  if (!match || match[1] === '.' || match[1] === '..' || /[:\0]/.test(match[1])) return null
-  const resolved = path.resolve(uploadDirectory, match[1])
-  return path.dirname(resolved) === uploadDirectory ? resolved : null
-}
+const uploadPath = require('../utils/upload-path')
+const { validCoords, isNumeric, readPoint, readExpenses, readItinerary, readVisitedAt } = require('../utils/request-input')
 const removeImages = paths => (paths || []).forEach(image => {
   const imagePath = uploadPath(image)
   if (!imagePath) return
@@ -29,18 +22,14 @@ const ownTrip = async (tid, userId) => {
   if (trip.creator.toString() !== userId) throw new HttpError('You cannot edit this trip', 403)
   return trip
 }
-const validCoords = point => point && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)) && Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lng)) <= 180
-const parsePoint = value => {
-  if (!value) return null
-  try { return typeof value === 'string' ? JSON.parse(value) : value } catch { return null }
-}
 const toStop = stop => stop.toObject ? stop.toObject({ getters: true }) : stop
 const kmBetween = (a, b) => {
   const rad = value => value * Math.PI / 180
   const dLat = rad(b.lat - a.lat)
   const dLng = rad(b.lng - a.lng)
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2
-  return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
+  const bounded = Math.min(1, Math.max(0, x))
+  return 6371 * 2 * Math.atan2(Math.sqrt(bounded), Math.sqrt(1 - bounded))
 }
 const withSummary = async trip => {
   const raw = trip.toObject ? trip.toObject({ getters: true }) : trip
@@ -54,15 +43,18 @@ const withSummary = async trip => {
 }
 const startTrip = async (req, res, next) => {
   let trip = null
-  const title = String(req.body.title || '').trim()
+  let committed = false
+  const title = typeof req.body.title === 'string' ? req.body.title.trim() : ''
   if (!title) return next(new HttpError('Trip title is required', 422))
-  const budget = Number(req.body.plannedBudget || 0)
-  if (!Number.isFinite(budget) || budget < 0) return next(new HttpError('Enter a valid planned budget', 422))
-  const startLocation = parsePoint(req.body.startLocation)
-  if (startLocation && !validCoords(startLocation)) return next(new HttpError('Starting location coordinates are invalid', 422))
+  if (req.body.startAddress !== undefined && typeof req.body.startAddress !== 'string') return next(new HttpError('Starting address must be text', 422))
+  const budgetInput = req.body.plannedBudget === undefined || req.body.plannedBudget === '' ? 0 : req.body.plannedBudget
+  const budget = Number(budgetInput)
+  if (!isNumeric(budgetInput) || budget < 0) return next(new HttpError('Enter a valid planned budget', 422))
   try {
+    const startLocation = readPoint(req.body.startLocation, 'Starting location')
+    const itinerary = readItinerary(req.body.itinerary === undefined ? [] : req.body.itinerary)
+    if (req.body.visibility !== undefined && !['public', 'followers', 'private'].includes(req.body.visibility)) return next(new HttpError('Choose a valid trip visibility', 422))
     if (await Trip.findOne({ creator: req.userData.userId, status: 'active' })) return next(new HttpError('You already have an active trip', 409))
-    const itinerary = typeof req.body.itinerary === 'string' ? JSON.parse(req.body.itinerary) : (req.body.itinerary || [])
     trip = new Trip({ title, creator: req.userData.userId, status: 'draft', startedAt: new Date(), plannedBudget: budget, visibility: req.body.visibility || 'private', itinerary, startAddress: String(req.body.startAddress || '').trim(), startLocation: validCoords(startLocation) ? { lat: Number(startLocation.lat), lng: Number(startLocation.lng) } : undefined })
     const user = await User.findById(req.userData.userId)
     if (!user) return next(new HttpError('User not found', 404))
@@ -72,17 +64,18 @@ const startTrip = async (req, res, next) => {
     await trip.save()
     user.trips.addToSet(trip._id)
     await user.save()
+    committed = true
     res.status(201).json({ trip: await withSummary(trip) })
   } catch (error) {
-    if (trip?._id) await Trip.findByIdAndDelete(trip._id).catch(() => {})
+    if (!committed && trip?._id) await Trip.findByIdAndDelete(trip._id).catch(() => {})
     return next(error.code === 11000 ? new HttpError('You already have an active trip', 409) : error)
   }
 }
 
 const reverseGeocode = async (req, res, next) => {
-  const point = parsePoint(req.body.location || req.body)
-  if (!validCoords(point)) return next(new HttpError('Valid latitude and longitude are required', 422))
   try {
+    const point = readPoint(req.body.location === undefined ? req.body : req.body.location)
+    if (!point) return next(new HttpError('Valid latitude and longitude are required', 422))
     const address = await getAddressForCoords(point)
     res.json({ address })
   } catch (error) {
@@ -99,30 +92,33 @@ const getActiveTrip = async (req, res, next) => {
 
 const addStop = async (req, res, next) => {
   let createdStop = null
+  let committed = false
   try {
     const trip = await ownTrip(req.params.tid, req.userData.userId)
     if (trip.status !== 'active') return next(new HttpError('Stops can only be added to an active trip', 409))
-    const title = String(req.body.title || '').trim()
+    const title = typeof req.body.title === 'string' ? req.body.title.trim() : ''
     if (!title) return next(new HttpError('Stop title is required', 422))
+    if (['note', 'address'].some(field => req.body[field] !== undefined && typeof req.body[field] !== 'string')) return next(new HttpError('Stop note and address must be text', 422))
     if (!req.files || req.files.length === 0) return next(new HttpError('Add at least one photo for this stop', 422))
-    const exif = parsePoint(req.body.exifLocation)
-    const browser = parsePoint(req.body.browserLocation)
+    const exif = readPoint(req.body.exifLocation, 'Photo GPS')
+    const browser = readPoint(req.body.browserLocation, 'Browser location')
     let location = validCoords(exif) ? exif : validCoords(browser) ? browser : null
     const address = String(req.body.address || '').trim()
     if (!location) {
       if (!address) return next(new HttpError('Provide an address or allow location access', 422))
       location = await getCoordsForAddress(address)
     }
-    let expenses = typeof req.body.expenses === 'string' ? JSON.parse(req.body.expenses || '[]') : (req.body.expenses || [])
-    expenses = expenses.map(item => ({ amount: Number(item.amount), category: String(item.category || 'Other'), note: String(item.note || '') }))
-    if (expenses.some(item => !Number.isFinite(item.amount) || item.amount < 0)) return next(new HttpError('Expense amounts must be valid non-negative numbers', 422))
-    createdStop = new TripStop({ trip: trip._id, title, note: req.body.note || '', images: (req.files || []).map(file => `/uploads/images/${file.filename}`), location, address, visitedAt: req.body.visitedAt ? new Date(req.body.visitedAt) : new Date(), expenses })
+    const expenses = readExpenses(req.body.expenses === undefined ? [] : req.body.expenses)
+    const visitedAt = req.body.visitedAt === undefined ? new Date() : readVisitedAt(req.body.visitedAt)
+    createdStop = new TripStop({ trip: trip._id, title, note: req.body.note || '', images: (req.files || []).map(file => `/uploads/images/${file.filename}`), location, address, visitedAt, expenses })
     await createdStop.save()
     trip.stops.addToSet(createdStop._id)
     await trip.save()
+    committed = true
+    req.uploadsCommitted = true
     res.status(201).json({ stop: toStop(createdStop), trip: await withSummary(trip) })
   } catch (error) {
-    if (createdStop?._id) await TripStop.findByIdAndDelete(createdStop._id).catch(() => {})
+    if (!committed && createdStop?._id) await TripStop.findByIdAndDelete(createdStop._id).catch(() => {})
     return next(error instanceof HttpError ? error : new HttpError(error.message || 'Could not add stop', error.status || 500))
   }
 }
@@ -133,6 +129,8 @@ const updateStop = async (req, res, next) => {
     if (trip.status === 'published') return next(new HttpError('Published trips cannot be edited', 409))
     const stop = await TripStop.findOne({ _id: req.params.sid, trip: trip._id })
     if (!stop) return next(new HttpError('Stop not found', 404))
+    if (req.body.title !== undefined && (typeof req.body.title !== 'string' || !req.body.title.trim())) return next(new HttpError('Stop title is required', 422))
+    if (['note', 'address'].some(field => req.body[field] !== undefined && typeof req.body[field] !== 'string')) return next(new HttpError('Stop note and address must be text', 422))
     const old = [...stop.images]
     let kept = old
     if (req.body.keepImages !== undefined) {
@@ -145,23 +143,24 @@ const updateStop = async (req, res, next) => {
         return next(new HttpError('Retained images must be a valid array of existing image paths', 422))
       }
     }
-    const visitedAt = req.body.visitedAt !== undefined ? new Date(req.body.visitedAt) : null
-    if (visitedAt && !Number.isFinite(visitedAt.getTime())) return next(new HttpError('Visited time must be a valid date', 422))
+    const visitedAt = req.body.visitedAt !== undefined ? readVisitedAt(req.body.visitedAt) : null
     const previousAddress = String(stop.address || '').trim()
     const address = req.body.address !== undefined ? String(req.body.address || '').trim() : previousAddress
     if (req.body.title !== undefined) stop.title = String(req.body.title).trim()
     if (req.body.note !== undefined) stop.note = req.body.note
     if (req.body.address !== undefined) stop.address = address
     if (visitedAt) stop.visitedAt = visitedAt
-    if (req.body.expenses !== undefined) stop.expenses = typeof req.body.expenses === 'string' ? JSON.parse(req.body.expenses) : req.body.expenses
-    const exif = parsePoint(req.body.exifLocation)
-    const browser = parsePoint(req.body.browserLocation)
+    if (req.body.expenses !== undefined) stop.expenses = readExpenses(req.body.expenses)
+    const exif = readPoint(req.body.exifLocation, 'Photo GPS')
+    const browser = readPoint(req.body.browserLocation, 'Browser location')
     if (validCoords(exif)) stop.location = exif
     else if (validCoords(browser)) stop.location = browser
     else if (address && address !== previousAddress) stop.location = await getCoordsForAddress(address)
     const added = (req.files || []).map(file => `/uploads/images/${file.filename}`)
+    if (kept.length + added.length > 10) return next(new HttpError('A stop can contain at most 10 photos', 422))
     stop.images = [...kept, ...added]
     await stop.save()
+    req.uploadsCommitted = true
     removeImages(old.filter(image => !stop.images.includes(image)))
     res.json({ stop: toStop(stop), trip: await withSummary(trip) })
   } catch (error) { return next(error instanceof HttpError ? error : new HttpError(error.message || 'Could not update stop', error.status || 500)) }
@@ -210,13 +209,18 @@ const publishTrip = async (req, res, next) => {
   try {
     const trip = await ownTrip(req.params.tid, req.userData.userId)
     if (trip.status !== 'completed') return next(new HttpError('Stop the trip before publishing it', 409))
-    if (req.body.title !== undefined) trip.title = String(req.body.title).trim()
+    if (req.body.title !== undefined) {
+      if (typeof req.body.title !== 'string' || !req.body.title.trim()) return next(new HttpError('Trip title is required', 422))
+      trip.title = req.body.title.trim()
+    }
+    if (req.body.visibility !== undefined && !['public', 'followers', 'private'].includes(req.body.visibility)) return next(new HttpError('Choose a valid trip visibility', 422))
     if (req.body.visibility) trip.visibility = req.body.visibility
-    if (req.body.itinerary) trip.itinerary = typeof req.body.itinerary === 'string' ? JSON.parse(req.body.itinerary) : req.body.itinerary
+    if (req.body.itinerary !== undefined) trip.itinerary = readItinerary(req.body.itinerary)
     const previousCover = trip.coverImage
     if (req.file) trip.coverImage = `/uploads/images/${req.file.filename}`
     trip.status = 'published'
     await trip.save()
+    req.uploadsCommitted = true
     if (req.file) removeImages([previousCover])
     res.json({ trip: await withSummary(trip) })
   } catch (error) { return next(error instanceof HttpError ? error : new HttpError(error.message || 'Could not publish trip', error.status || 500)) }
@@ -226,10 +230,16 @@ const updateTrip = async (req, res, next) => {
   try {
     const trip = await ownTrip(req.params.tid, req.userData.userId)
     if (trip.status === 'published') return next(new HttpError('Published trips cannot be edited', 409))
-    for (const field of ['title', 'visibility']) if (req.body[field] !== undefined) trip[field] = req.body[field]
-    if (req.body.plannedBudget !== undefined) trip.plannedBudget = Number(req.body.plannedBudget)
+    if (req.body.title !== undefined && (typeof req.body.title !== 'string' || !req.body.title.trim())) return next(new HttpError('Trip title is required', 422))
+    if (req.body.visibility !== undefined && !['public', 'followers', 'private'].includes(req.body.visibility)) return next(new HttpError('Choose a valid trip visibility', 422))
+    if (req.body.title !== undefined) trip.title = req.body.title.trim()
+    if (req.body.visibility !== undefined) trip.visibility = req.body.visibility
+    if (req.body.plannedBudget !== undefined) {
+      if (!isNumeric(req.body.plannedBudget)) return next(new HttpError('Enter a valid planned budget', 422))
+      trip.plannedBudget = Number(req.body.plannedBudget)
+    }
     if (!Number.isFinite(trip.plannedBudget) || trip.plannedBudget < 0) return next(new HttpError('Enter a valid planned budget', 422))
-    if (req.body.itinerary !== undefined) trip.itinerary = typeof req.body.itinerary === 'string' ? JSON.parse(req.body.itinerary) : req.body.itinerary
+    if (req.body.itinerary !== undefined) trip.itinerary = readItinerary(req.body.itinerary)
     await trip.save()
     res.json({ trip: await withSummary(trip) })
   } catch (error) { return next(error instanceof HttpError ? error : new HttpError(error.message || 'Could not update trip', error.status || 500)) }
