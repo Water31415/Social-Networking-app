@@ -106,7 +106,7 @@ Open [localhost:3000](http://localhost:3000). Install and build in the same envi
 
 ### Environment configuration
 
-Development secrets belong in `Backend/.env`; production reads `Backend/.env.production` or the host's injected environment variables. Injected variables take precedence. Both files are ignored by Git and Docker. Frontend variables are public build-time configuration.
+Development secrets belong in `Backend/.env`; production reads `Backend/.env.production` or the host's injected environment variables. Injected variables take precedence. Both files are ignored by Git. Frontend variables are public build-time configuration.
 
 | Backend variable | Purpose |
 | --- | --- |
@@ -128,50 +128,7 @@ Development secrets belong in `Backend/.env`; production reads `Backend/.env.pro
 
 Keep local API addresses in `Frontend/.env.development.local`. Use `Frontend/.env.production.local` or build environment variables for a separate production API. Frontend environment changes require rebuilding; backend environment changes require restarting the server. Never put backend secrets in frontend configuration.
 
-## Deploy with Docker
-
-The multi-stage Dockerfile builds React and installs only backend production dependencies in the final image. The application runs as the non-root `node` user. Local `.env` files, uploaded photographs, dependency folders, and reports are excluded from the image context.
-
-Create configuration files if needed:
-
-```powershell
-if (-not (Test-Path Backend/.env.production)) { Copy-Item Backend/.env.production.example Backend/.env.production }
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-```
-
-On Linux, use `cp -n Backend/.env.production.example Backend/.env.production` and `cp -n .env.example .env` for fresh-file copies.
-
-Configure the database URI, generated JWT secret, allowed origins, and provider keys in `Backend/.env.production`. Allow the deployment host to connect to the database. Set the published port and domain in the root `.env`. Compose uses production mode and a one-hour session lifetime. The development configuration remains separate.
-
-```sh
-docker compose up --build -d snapit
-docker compose ps
-docker compose logs -f snapit
-```
-
-Open [localhost:8080](http://localhost:8080), or the `SNAPIT_PORT` chosen in the root `.env`. The published port binds to the host's loopback interface; public traffic goes through an HTTPS proxy.
-
-### Public HTTPS
-
-Point your domain's DNS at the server, set `SNAPIT_DOMAIN` in the root `.env`, and set `FRONTEND_ORIGINS` in `Backend/.env.production` to the HTTPS origin. Make ports 80/443 available to Caddy, then run:
-
-```sh
-docker compose --profile https up --build -d
-```
-
-Caddy proxies to `snapit:5000` and stores certificate state in named volumes. A host with managed HTTPS can run the Dockerfile directly instead; supply backend environment variables, persistent upload storage, and the health-check path there.
-
-### Upload persistence and existing photographs
-
-Compose mounts `uploads` at `/app/Backend/uploads/images`. The image starts without your local photographs. When reusing an existing database, copy its corresponding images into the running service once:
-
-```sh
-docker compose cp Backend/uploads/images/. snapit:/app/Backend/uploads/images/
-```
-
-Back up MongoDB and the upload volume together. Preserve named volumes when replacing containers. Custom bind mounts must be writable by UID 1000, the image's application user. This setup targets one backend instance; multiple instances need shared uploads or an object-storage integration.
-
-### Deployment without Docker
+## Production deployment
 
 Install both packages and configure `Backend/.env.production` as above. For a local production preview, use an available port such as 8080; on a hosting provider, use its assigned `PORT` instead:
 
@@ -198,7 +155,7 @@ npm run build
 npm run test:production
 ```
 
-Regression/API suites use mocked effects. Production checks exercise the built SPA, deep-route refreshes, asset caching, missing resources, health endpoints, and graceful shutdown with database operations mocked. GitHub Actions runs these checks and builds the Docker image on pushes/pull requests.
+Regression/API suites use mocked effects. Production checks exercise the built SPA, deep-route refreshes, asset caching, missing resources, health endpoints, and graceful shutdown with database operations mocked. GitHub Actions runs these checks on pushes and pull requests.
 
 These checks use the configured database:
 
@@ -231,10 +188,7 @@ Frontend/
   src/shared/             Context, hooks, themes, reusable UI
   public/                 Card artwork and static assets
   build/                  Generated production output
-Dockerfile                Production image
-compose.yaml              App, persistent storage, optional HTTPS proxy
-Caddyfile                 HTTPS reverse proxy
-.github/workflows/ci.yml   Tests and image build
+.github/workflows/ci.yml   Automated checks
 ```
 
-References: [Docker Node.js guide](https://docs.docker.com/guides/nodejs/), [Docker volumes](https://docs.docker.com/engine/storage/volumes/), [Express health checks and shutdown](https://expressjs.com/en/advanced/healthcheck-graceful-shutdown/), [Vite deployment](https://vite.dev/guide/static-deploy.html), and [Caddy reverse proxy](https://caddyserver.com/docs/quick-starts/reverse-proxy).
+References: [Express health checks and shutdown](https://expressjs.com/en/advanced/healthcheck-graceful-shutdown/) and [Vite deployment](https://vite.dev/guide/static-deploy.html).

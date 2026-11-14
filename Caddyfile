@@ -1,4 +1,0 @@
-{$SNAPIT_DOMAIN} {
-    encode zstd gzip
-    reverse_proxy snapit:5000
-}

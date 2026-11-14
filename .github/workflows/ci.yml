@@ -23,4 +23,3 @@ jobs:
       - run: npm run test:api
       - run: npm run build
       - run: npm run test:production
-      - run: docker build -t snapit:ci .
